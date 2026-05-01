@@ -1,6 +1,7 @@
 import {
   BarChart3,
   Download,
+  History,
   Home,
   LineChart,
   Upload,
@@ -31,6 +32,12 @@ export const dashboardMenu = [
     label: "Comercial",
     href: "/dashboard/comercial",
     icon: BarChart3,
+    roles: ["CLIENT_ADMIN", "CLIENT_USER"],
+  },
+  {
+    label: "Históricos",
+    href: "/dashboard/historicos",
+    icon: History,
     roles: ["CLIENT_ADMIN", "CLIENT_USER"],
   },
   {
