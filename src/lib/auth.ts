@@ -3,14 +3,15 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, resetRateLimit } from "@/lib/rate-limit";
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(1),
+  password: z.string().min(8),
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 8 * 60 * 60 }, // 8 horas
   pages: {
     signIn: "/login",
   },
@@ -24,8 +25,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
+        const { email, password } = parsed.data;
+        const rateLimitKey = `login:${email}`;
+        const { allowed } = checkRateLimit(rateLimitKey);
+        if (!allowed) return null;
+
         const user = await prisma.user.findUnique({
-          where: { email: parsed.data.email },
+          where: { email },
           select: {
             id: true,
             name: true,
@@ -39,12 +45,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!user || !user.isActive) return null;
 
-        const valid = await bcrypt.compare(
-          parsed.data.password,
-          user.passwordHash
-        );
+        const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) return null;
 
+        resetRateLimit(rateLimitKey);
         return {
           id: user.id,
           name: user.name,

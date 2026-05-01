@@ -54,10 +54,20 @@ export async function uploadData(
   if (!file || file.size === 0) {
     return { success: false, message: "Selecciona un archivo Excel (.xlsx)." };
   }
+  if (file.size > 10 * 1024 * 1024) {
+    return { success: false, message: "El archivo no debe superar 10 MB." };
+  }
+  const ALLOWED_MIME = [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel",
+  ];
+  if (!ALLOWED_MIME.includes(file.type)) {
+    return { success: false, message: "Solo se permiten archivos Excel (.xlsx, .xls)." };
+  }
   if (!["FORECAST", "HC", "COMERCIAL"].includes(module)) {
     return { success: false, message: "Módulo inválido." };
   }
-  if (isNaN(anio) || isNaN(mes) || mes < 1 || mes > 12) {
+  if (isNaN(anio) || anio < 2000 || anio > 2100 || isNaN(mes) || mes < 1 || mes > 12) {
     return { success: false, message: "Año o mes inválido." };
   }
 

@@ -54,7 +54,7 @@ export async function createUser(formData: FormData): Promise<ActionState> {
   const exists = await prisma.user.findUnique({ where: { email } });
   if (exists) return { success: false, message: "Ya existe un usuario con ese email." };
 
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHash = await bcrypt.hash(password, 12);
   await prisma.user.create({
     data: {
       clientId: session.user.clientId,
@@ -128,7 +128,7 @@ export async function changePassword(formData: FormData): Promise<ActionState> {
   });
   if (!user) return { success: false, message: "Usuario no encontrado." };
 
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHash = await bcrypt.hash(password, 12);
   await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
 
   return { success: true, message: "Contraseña actualizada." };
