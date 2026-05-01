@@ -93,13 +93,13 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#A9945D]">
+        <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#238D80]">
           Resumen ejecutivo
         </p>
-        <h1 className="mt-2 text-3xl font-semibold text-neutral-950">
+        <h1 className="mt-2 text-3xl font-semibold text-[#F1BE48]">
           Indicadores del mes
         </h1>
-        <p className="mt-2 max-w-2xl text-neutral-500">
+        <p className="mt-2 max-w-2xl text-[#9A9A9A]">
           Vista general de Forecast, Headcount y Comercial para seguimiento directivo.
         </p>
       </div>
@@ -111,17 +111,17 @@ export default async function DashboardPage() {
             <Link
               key={card.title}
               href={card.href}
-              className="group rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+              className="group rounded-3xl border border-[#222222] bg-[#111111] p-6  transition hover:-translate-y-1 hover:shadow-md"
             >
               <div className="mb-6 flex items-center justify-between">
-                <div className="rounded-2xl bg-[#A9945D]/10 p-3 text-[#7A673A]">
+                <div className="rounded-2xl bg-[#238D80]/10 p-3 text-[#205C40]">
                   <Icon className="h-6 w-6" />
                 </div>
-                <ArrowRight className="h-5 w-5 text-neutral-300 transition group-hover:translate-x-1 group-hover:text-[#A9945D]" />
+                <ArrowRight className="h-5 w-5 text-neutral-300 transition group-hover:translate-x-1 group-hover:text-[#238D80]" />
               </div>
-              <p className="text-sm font-medium text-neutral-500">{card.title}</p>
-              <h2 className="mt-2 text-3xl font-semibold text-neutral-950">{card.value}</h2>
-              <p className="mt-2 text-sm text-neutral-500">{card.subtitle}</p>
+              <p className="text-sm font-medium text-[#9A9A9A]">{card.title}</p>
+              <h2 className="mt-2 text-3xl font-semibold text-[#F1BE48]">{card.value}</h2>
+              <p className="mt-2 text-sm text-[#9A9A9A]">{card.subtitle}</p>
             </Link>
           );
         })}

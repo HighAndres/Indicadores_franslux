@@ -85,14 +85,14 @@ export function UsersClient({ users, currentUserId }: UsersClientProps) {
 
   return (
     <>
-      <div className="rounded-3xl border border-neutral-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-neutral-100 px-6 py-5">
-          <h2 className="text-base font-semibold text-neutral-950">
+      <div className="rounded-3xl border border-[#222222] bg-[#111111] ">
+        <div className="flex items-center justify-between border-b border-[#222222] px-6 py-5">
+          <h2 className="text-base font-semibold text-[#F1BE48]">
             Usuarios ({users.length})
           </h2>
           <button
             onClick={() => open("create")}
-            className="flex items-center gap-2 rounded-xl bg-[#A9945D] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#7A673A]"
+            className="flex items-center gap-2 rounded-xl bg-[#238D80] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#205C40]"
           >
             <Plus className="h-4 w-4" />
             Nuevo usuario
@@ -102,33 +102,33 @@ export function UsersClient({ users, currentUserId }: UsersClientProps) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-neutral-100">
-                <th className="px-6 pb-3 pt-4 text-left font-medium text-neutral-500">Nombre</th>
-                <th className="pb-3 pt-4 text-left font-medium text-neutral-500">Email</th>
-                <th className="pb-3 pt-4 text-left font-medium text-neutral-500">Rol</th>
-                <th className="pb-3 pt-4 text-left font-medium text-neutral-500">Estado</th>
-                <th className="pr-6 pb-3 pt-4 text-right font-medium text-neutral-500">
+              <tr className="border-b border-[#222222]">
+                <th className="px-6 pb-3 pt-4 text-left font-medium text-[#9A9A9A]">Nombre</th>
+                <th className="pb-3 pt-4 text-left font-medium text-[#9A9A9A]">Email</th>
+                <th className="pb-3 pt-4 text-left font-medium text-[#9A9A9A]">Rol</th>
+                <th className="pb-3 pt-4 text-left font-medium text-[#9A9A9A]">Estado</th>
+                <th className="pr-6 pb-3 pt-4 text-right font-medium text-[#9A9A9A]">
                   Acciones
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-50">
+            <tbody className="divide-y divide-[#1A1A1A]">
               {users.map((user) => (
-                <tr key={user.id} className="hover:bg-neutral-50/50">
-                  <td className="px-6 py-4 font-medium text-neutral-950">
+                <tr key={user.id} className="hover:bg-white/5">
+                  <td className="px-6 py-4 font-medium text-[#F1BE48]">
                     {user.name}
                     {user.id === currentUserId && (
-                      <span className="ml-2 text-xs font-normal text-neutral-400">(tú)</span>
+                      <span className="ml-2 text-xs font-normal text-[#555555]">(tú)</span>
                     )}
                   </td>
-                  <td className="py-4 text-neutral-500">{user.email}</td>
+                  <td className="py-4 text-[#9A9A9A]">{user.email}</td>
                   <td className="py-4">
                     <span
                       className={[
                         "rounded-full px-3 py-1 text-xs font-medium",
                         user.role === "CLIENT_ADMIN"
-                          ? "bg-[#A9945D]/10 text-[#7A673A]"
-                          : "bg-neutral-100 text-neutral-600",
+                          ? "bg-[#238D80]/10 text-[#205C40]"
+                          : "bg-white/5 text-[#9A9A9A]",
                       ].join(" ")}
                     >
                       {ROLE_LABEL[user.role] ?? user.role}
@@ -207,9 +207,9 @@ export function UsersClient({ users, currentUserId }: UsersClientProps) {
                 name="isActive"
                 value="on"
                 defaultChecked={selected.isActive}
-                className="h-4 w-4 rounded accent-[#A9945D]"
+                className="h-4 w-4 rounded accent-[#238D80]"
               />
-              <span className="text-sm font-medium text-neutral-700">Usuario activo</span>
+              <span className="text-sm font-medium text-[#9A9A9A]">Usuario activo</span>
             </label>
             {error && <ErrMsg text={error} />}
             <SubmitBtn pending={updatePending} label="Guardar cambios" />
@@ -242,13 +242,13 @@ function Modal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md rounded-3xl bg-white p-8 shadow-xl">
+      <div className="relative w-full max-w-md rounded-3xl bg-[#111111] p-8 shadow-xl">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-neutral-950">{title}</h2>
+          <h2 className="text-lg font-semibold text-[#F1BE48]">{title}</h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100"
+            className="rounded-lg p-1.5 text-[#555555] transition hover:bg-white/5"
           >
             <X className="h-5 w-5" />
           </button>
@@ -270,7 +270,7 @@ function IconBtn({
       title={title}
       onClick={onClick}
       disabled={disabled}
-      className="rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700 disabled:opacity-40"
+      className="rounded-lg p-1.5 text-[#555555] transition hover:bg-white/5 hover:text-[#9A9A9A] disabled:opacity-40"
     >
       {icon}
     </button>
@@ -285,14 +285,14 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-neutral-700">{label}</label>
+      <label className="mb-1.5 block text-sm font-medium text-[#9A9A9A]">{label}</label>
       <input
         type={type}
         name={name}
         defaultValue={defaultValue}
         placeholder={placeholder}
         required={required}
-        className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-950 outline-none focus:border-[#A9945D] focus:bg-white focus:ring-2 focus:ring-[#A9945D]/20"
+        className="w-full rounded-xl border border-[#222222] bg-[#1A1A1A] px-4 py-2.5 text-sm text-[#F1BE48] outline-none focus:border-[#238D80] focus:bg-[#111111] focus:ring-2 focus:ring-[#238D80]/20"
       />
     </div>
   );
@@ -302,7 +302,7 @@ function PasswordField({ label, name }: { label: string; name: string }) {
   const [show, setShow] = useState(false);
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-neutral-700">{label}</label>
+      <label className="mb-1.5 block text-sm font-medium text-[#9A9A9A]">{label}</label>
       <div className="relative">
         <input
           type={show ? "text" : "password"}
@@ -310,13 +310,13 @@ function PasswordField({ label, name }: { label: string; name: string }) {
           required
           minLength={8}
           placeholder="Mínimo 8 caracteres"
-          className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 pr-11 text-sm text-neutral-950 outline-none focus:border-[#A9945D] focus:bg-white focus:ring-2 focus:ring-[#A9945D]/20"
+          className="w-full rounded-xl border border-[#222222] bg-[#1A1A1A] px-4 py-2.5 pr-11 text-sm text-[#F1BE48] outline-none focus:border-[#238D80] focus:bg-[#111111] focus:ring-2 focus:ring-[#238D80]/20"
         />
         <button
           type="button"
           tabIndex={-1}
           onClick={() => setShow((v) => !v)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#555555] hover:text-[#9A9A9A]"
         >
           {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
@@ -328,11 +328,11 @@ function PasswordField({ label, name }: { label: string; name: string }) {
 function RoleField({ defaultValue }: { defaultValue?: string }) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-neutral-700">Rol</label>
+      <label className="mb-1.5 block text-sm font-medium text-[#9A9A9A]">Rol</label>
       <select
         name="role"
         defaultValue={defaultValue ?? "CLIENT_USER"}
-        className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-950 outline-none focus:border-[#A9945D] focus:bg-white focus:ring-2 focus:ring-[#A9945D]/20"
+        className="w-full rounded-xl border border-[#222222] bg-[#1A1A1A] px-4 py-2.5 text-sm text-[#F1BE48] outline-none focus:border-[#238D80] focus:bg-[#111111] focus:ring-2 focus:ring-[#238D80]/20"
       >
         <option value="CLIENT_USER">Visualizador</option>
         <option value="CLIENT_ADMIN">Administrador</option>
@@ -352,7 +352,7 @@ function SubmitBtn({ pending, label }: { pending: boolean; label: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-xl bg-[#A9945D] py-2.5 text-sm font-semibold text-white transition hover:bg-[#7A673A] disabled:opacity-60"
+      className="w-full rounded-xl bg-[#238D80] py-2.5 text-sm font-semibold text-white transition hover:bg-[#205C40] disabled:opacity-60"
     >
       {pending ? "Procesando…" : label}
     </button>

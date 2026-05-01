@@ -56,16 +56,16 @@ export default async function HistoricosPage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#A9945D]">
+          <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#238D80]">
             Históricos
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-neutral-950">
+          <h1 className="mt-2 text-3xl font-semibold text-[#F1BE48]">
             Consulta por período
           </h1>
-          <p className="mt-2 text-neutral-500">
+          <p className="mt-2 text-[#9A9A9A]">
             Evolución mensual de los tres módulos.{" "}
             {totalPeriodos > 0 && (
-              <span className="font-medium text-neutral-700">
+              <span className="font-medium text-[#9A9A9A]">
                 {totalPeriodos} período{totalPeriodos !== 1 ? "s" : ""} con datos.
               </span>
             )}

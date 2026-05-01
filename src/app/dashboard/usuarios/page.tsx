@@ -25,13 +25,13 @@ export default async function UsuariosPage() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#A9945D]">
+        <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#238D80]">
           Administración
         </p>
-        <h1 className="mt-2 text-3xl font-semibold text-neutral-950">
+        <h1 className="mt-2 text-3xl font-semibold text-[#F1BE48]">
           Gestión de usuarios
         </h1>
-        <p className="mt-2 text-neutral-500">
+        <p className="mt-2 text-[#9A9A9A]">
           Crea, edita y gestiona los accesos al sistema.
         </p>
       </div>

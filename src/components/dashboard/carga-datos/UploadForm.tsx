@@ -42,13 +42,13 @@ export function UploadForm() {
     <form action={action} className="space-y-5">
       <div className="grid gap-5 sm:grid-cols-3">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-neutral-700">
+          <label className="mb-1.5 block text-sm font-medium text-[#9A9A9A]">
             Módulo
           </label>
           <select
             name="module"
             required
-            className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-950 outline-none focus:border-[#A9945D] focus:bg-white focus:ring-2 focus:ring-[#A9945D]/20"
+            className="w-full rounded-xl border border-[#222222] bg-[#1A1A1A] px-4 py-2.5 text-sm text-[#F1BE48] outline-none focus:border-[#238D80] focus:bg-[#111111] focus:ring-2 focus:ring-[#238D80]/20"
           >
             {MODULOS.map((m) => (
               <option key={m.value} value={m.value}>{m.label}</option>
@@ -57,14 +57,14 @@ export function UploadForm() {
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-neutral-700">
+          <label className="mb-1.5 block text-sm font-medium text-[#9A9A9A]">
             Año
           </label>
           <select
             name="anio"
             defaultValue={now.getFullYear()}
             required
-            className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-950 outline-none focus:border-[#A9945D] focus:bg-white focus:ring-2 focus:ring-[#A9945D]/20"
+            className="w-full rounded-xl border border-[#222222] bg-[#1A1A1A] px-4 py-2.5 text-sm text-[#F1BE48] outline-none focus:border-[#238D80] focus:bg-[#111111] focus:ring-2 focus:ring-[#238D80]/20"
           >
             {ANIOS.map((y) => (
               <option key={y} value={y}>{y}</option>
@@ -73,14 +73,14 @@ export function UploadForm() {
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-neutral-700">
+          <label className="mb-1.5 block text-sm font-medium text-[#9A9A9A]">
             Mes
           </label>
           <select
             name="mes"
             defaultValue={now.getMonth() + 1}
             required
-            className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-950 outline-none focus:border-[#A9945D] focus:bg-white focus:ring-2 focus:ring-[#A9945D]/20"
+            className="w-full rounded-xl border border-[#222222] bg-[#1A1A1A] px-4 py-2.5 text-sm text-[#F1BE48] outline-none focus:border-[#238D80] focus:bg-[#111111] focus:ring-2 focus:ring-[#238D80]/20"
           >
             {MESES.map((m, i) => (
               <option key={i + 1} value={i + 1}>{m}</option>
@@ -90,7 +90,7 @@ export function UploadForm() {
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-neutral-700">
+        <label className="mb-1.5 block text-sm font-medium text-[#9A9A9A]">
           Archivo Excel
         </label>
         <label
@@ -98,19 +98,19 @@ export function UploadForm() {
           className={[
             "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-6 py-10 transition",
             fileName
-              ? "border-[#A9945D]/40 bg-[#A9945D]/5"
-              : "border-neutral-200 bg-neutral-50 hover:border-[#A9945D]/40 hover:bg-[#A9945D]/5",
+              ? "border-[#238D80]/40 bg-[#238D80]/5"
+              : "border-[#222222] bg-[#1A1A1A] hover:border-[#238D80]/40 hover:bg-[#238D80]/5",
           ].join(" ")}
         >
           {fileName ? (
             <>
-              <FileSpreadsheet className="h-8 w-8 text-[#A9945D]" />
+              <FileSpreadsheet className="h-8 w-8 text-[#238D80]" />
               <div className="text-center">
-                <p className="text-sm font-medium text-neutral-950">{fileName}</p>
+                <p className="text-sm font-medium text-[#F1BE48]">{fileName}</p>
                 <button
                   type="button"
                   onClick={(e) => { e.preventDefault(); handleReset(); }}
-                  className="mt-1 text-xs text-neutral-400 hover:text-red-500"
+                  className="mt-1 text-xs text-[#555555] hover:text-red-500"
                 >
                   Cambiar archivo
                 </button>
@@ -120,11 +120,11 @@ export function UploadForm() {
             <>
               <Upload className="h-8 w-8 text-neutral-300" />
               <div className="text-center">
-                <p className="text-sm font-medium text-neutral-700">
+                <p className="text-sm font-medium text-[#9A9A9A]">
                   Arrastra tu archivo aquí o{" "}
-                  <span className="text-[#A9945D]">haz clic para buscar</span>
+                  <span className="text-[#238D80]">haz clic para buscar</span>
                 </p>
-                <p className="mt-1 text-xs text-neutral-400">
+                <p className="mt-1 text-xs text-[#555555]">
                   Solo archivos .xlsx o .xls
                 </p>
               </div>
@@ -164,7 +164,7 @@ export function UploadForm() {
       <button
         type="submit"
         disabled={isPending || !fileName}
-        className="flex items-center gap-2 rounded-xl bg-[#A9945D] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#7A673A] disabled:opacity-50"
+        className="flex items-center gap-2 rounded-xl bg-[#238D80] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#205C40] disabled:opacity-50"
       >
         <Upload className="h-4 w-4" />
         {isPending ? "Procesando…" : "Cargar datos"}

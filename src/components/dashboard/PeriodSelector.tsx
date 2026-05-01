@@ -34,7 +34,7 @@ export function PeriodSelector({ anio, mes }: PeriodSelectorProps) {
       <select
         value={anio}
         onChange={(e) => update("anio", e.target.value)}
-        className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 outline-none focus:border-[#A9945D] focus:ring-2 focus:ring-[#A9945D]/20"
+        className="rounded-xl border border-[#222222] bg-[#111111] px-3 py-2 text-sm font-medium text-[#9A9A9A] outline-none focus:border-[#238D80] focus:ring-2 focus:ring-[#238D80]/20"
       >
         {ANIOS.map((y) => (
           <option key={y} value={y}>{y}</option>
@@ -43,13 +43,13 @@ export function PeriodSelector({ anio, mes }: PeriodSelectorProps) {
       <select
         value={mes}
         onChange={(e) => update("mes", e.target.value)}
-        className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 outline-none focus:border-[#A9945D] focus:ring-2 focus:ring-[#A9945D]/20"
+        className="rounded-xl border border-[#222222] bg-[#111111] px-3 py-2 text-sm font-medium text-[#9A9A9A] outline-none focus:border-[#238D80] focus:ring-2 focus:ring-[#238D80]/20"
       >
         {MESES.map((m, i) => (
           <option key={i + 1} value={i + 1}>{m}</option>
         ))}
       </select>
-      {isPending && <span className="text-sm text-neutral-400">Cargando…</span>}
+      {isPending && <span className="text-sm text-[#555555]">Cargando…</span>}
     </div>
   );
 }

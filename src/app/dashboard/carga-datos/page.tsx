@@ -32,25 +32,25 @@ export default async function CargaDatosPage() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#A9945D]">
+        <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#238D80]">
           Carga de datos
         </p>
-        <h1 className="mt-2 text-3xl font-semibold text-neutral-950">
+        <h1 className="mt-2 text-3xl font-semibold text-[#F1BE48]">
           Importar archivo Excel
         </h1>
-        <p className="mt-2 text-neutral-500">
+        <p className="mt-2 text-[#9A9A9A]">
           Sube un archivo .xlsx para actualizar los indicadores de cualquier módulo y período.
         </p>
       </div>
 
-      <div className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
+      <div className="rounded-3xl border border-[#222222] bg-[#111111] p-8 ">
         <div className="mb-6 flex items-center gap-3">
-          <div className="rounded-2xl bg-[#A9945D]/10 p-3 text-[#7A673A]">
+          <div className="rounded-2xl bg-[#238D80]/10 p-3 text-[#205C40]">
             <FileSpreadsheet className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-neutral-950">Nuevo archivo</h2>
-            <p className="text-sm text-neutral-400">
+            <h2 className="text-base font-semibold text-[#F1BE48]">Nuevo archivo</h2>
+            <p className="text-sm text-[#555555]">
               Los datos existentes del período seleccionado serán reemplazados.
             </p>
           </div>
@@ -58,51 +58,51 @@ export default async function CargaDatosPage() {
 
         <UploadForm />
 
-        <div className="mt-6 rounded-2xl border border-neutral-100 bg-neutral-50 p-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+        <div className="mt-6 rounded-2xl border border-[#222222] bg-[#1A1A1A] p-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#555555]">
             Formato esperado por módulo
           </p>
-          <div className="grid gap-3 text-xs text-neutral-500 sm:grid-cols-3">
+          <div className="grid gap-3 text-xs text-[#9A9A9A] sm:grid-cols-3">
             <div>
-              <p className="font-medium text-neutral-700">Forecast</p>
+              <p className="font-medium text-[#9A9A9A]">Forecast</p>
               <p>Dirección, Área, Real, Presupuesto</p>
             </div>
             <div>
-              <p className="font-medium text-neutral-700">Headcount (1 fila)</p>
+              <p className="font-medium text-[#9A9A9A]">Headcount (1 fila)</p>
               <p>Total, Altas, Bajas, Días Laborados, Masculino, Femenino</p>
             </div>
             <div>
-              <p className="font-medium text-neutral-700">Comercial</p>
+              <p className="font-medium text-[#9A9A9A]">Comercial</p>
               <p>Cadena, KAM, Tienda, Real, Presupuesto</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-base font-semibold text-neutral-950">
+      <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6 ">
+        <h2 className="mb-4 text-base font-semibold text-[#F1BE48]">
           Historial de cargas
         </h2>
 
         {history.length === 0 ? (
-          <p className="text-sm text-neutral-400">Aún no hay cargas registradas.</p>
+          <p className="text-sm text-[#555555]">Aún no hay cargas registradas.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-neutral-100">
-                  <th className="pb-3 text-left font-medium text-neutral-500">Fecha</th>
-                  <th className="pb-3 text-left font-medium text-neutral-500">Módulo</th>
-                  <th className="pb-3 text-left font-medium text-neutral-500">Período</th>
-                  <th className="pb-3 text-left font-medium text-neutral-500">Archivo</th>
-                  <th className="pb-3 text-right font-medium text-neutral-500">Registros</th>
-                  <th className="pb-3 text-left font-medium text-neutral-500">Usuario</th>
+                <tr className="border-b border-[#222222]">
+                  <th className="pb-3 text-left font-medium text-[#9A9A9A]">Fecha</th>
+                  <th className="pb-3 text-left font-medium text-[#9A9A9A]">Módulo</th>
+                  <th className="pb-3 text-left font-medium text-[#9A9A9A]">Período</th>
+                  <th className="pb-3 text-left font-medium text-[#9A9A9A]">Archivo</th>
+                  <th className="pb-3 text-right font-medium text-[#9A9A9A]">Registros</th>
+                  <th className="pb-3 text-left font-medium text-[#9A9A9A]">Usuario</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-50">
+              <tbody className="divide-y divide-[#1A1A1A]">
                 {history.map((h) => (
-                  <tr key={h.id} className="hover:bg-neutral-50/50">
-                    <td className="py-3 text-neutral-500">
+                  <tr key={h.id} className="hover:bg-white/5">
+                    <td className="py-3 text-[#9A9A9A]">
                       {h.createdAt.toLocaleDateString("es-MX", {
                         day: "2-digit",
                         month: "short",
@@ -112,20 +112,20 @@ export default async function CargaDatosPage() {
                       })}
                     </td>
                     <td className="py-3">
-                      <span className="rounded-full bg-[#A9945D]/10 px-3 py-1 text-xs font-medium text-[#7A673A]">
+                      <span className="rounded-full bg-[#238D80]/10 px-3 py-1 text-xs font-medium text-[#205C40]">
                         {MODULE_LABEL[h.module] ?? h.module}
                       </span>
                     </td>
-                    <td className="py-3 text-neutral-700">
+                    <td className="py-3 text-[#9A9A9A]">
                       {MESES[h.mes - 1]} {h.anio}
                     </td>
-                    <td className="max-w-[200px] truncate py-3 text-neutral-500">
+                    <td className="max-w-[200px] truncate py-3 text-[#9A9A9A]">
                       {h.fileName}
                     </td>
-                    <td className="py-3 text-right font-medium text-neutral-950">
+                    <td className="py-3 text-right font-medium text-[#F1BE48]">
                       {h.rows.toLocaleString("es-MX")}
                     </td>
-                    <td className="py-3 text-neutral-500">{h.user.name}</td>
+                    <td className="py-3 text-[#9A9A9A]">{h.user.name}</td>
                   </tr>
                 ))}
               </tbody>

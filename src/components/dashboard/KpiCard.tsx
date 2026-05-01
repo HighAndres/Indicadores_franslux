@@ -14,18 +14,18 @@ export function KpiCard({ label, value, subtitle, icon, highlight }: KpiCardProp
       className={[
         "rounded-3xl border p-6",
         highlight
-          ? "border-[#A9945D]/20 bg-[#A9945D]/5"
-          : "border-neutral-200 bg-white shadow-sm",
+          ? "border-[#F1BE48]/20 bg-[#F1BE48]/5"
+          : "border-[#222222] bg-[#111111]",
       ].join(" ")}
     >
       {icon && (
-        <div className="mb-4 inline-flex rounded-2xl bg-[#A9945D]/10 p-3 text-[#7A673A]">
+        <div className="mb-4 inline-flex rounded-2xl bg-[#F1BE48]/10 p-3 text-[#F1BE48]">
           {icon}
         </div>
       )}
-      <p className="text-sm font-medium text-neutral-500">{label}</p>
-      <p className="mt-1 text-3xl font-semibold text-neutral-950">{value}</p>
-      {subtitle && <p className="mt-1 text-sm text-neutral-400">{subtitle}</p>}
+      <p className="text-sm font-medium text-[#9A9A9A]">{label}</p>
+      <p className="mt-1 text-3xl font-semibold text-[#F1BE48]">{value}</p>
+      {subtitle && <p className="mt-1 text-sm text-[#9A9A9A]">{subtitle}</p>}
     </div>
   );
 }

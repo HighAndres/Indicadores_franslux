@@ -35,13 +35,13 @@ export default async function HcPage({
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#A9945D]">
+          <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#238D80]">
             Headcount
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-neutral-950">
+          <h1 className="mt-2 text-3xl font-semibold text-[#F1BE48]">
             Métricas de colaboradores
           </h1>
-          <p className="mt-2 text-neutral-500">
+          <p className="mt-2 text-[#9A9A9A]">
             Total, altas, bajas, rotación, días laborados y equidad de género.
           </p>
         </div>
@@ -54,8 +54,8 @@ export default async function HcPage({
       </div>
 
       {!data ? (
-        <div className="rounded-3xl border border-dashed border-neutral-200 bg-white p-12 text-center">
-          <p className="text-neutral-400">Sin datos para el período seleccionado.</p>
+        <div className="rounded-3xl border border-dashed border-[#222222] bg-[#111111] p-12 text-center">
+          <p className="text-[#555555]">Sin datos para el período seleccionado.</p>
         </div>
       ) : (
         <>

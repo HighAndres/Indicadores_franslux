@@ -91,13 +91,13 @@ export default async function ReportesPage({
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#A9945D]">
+          <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#238D80]">
             Reportes
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-neutral-950">
+          <h1 className="mt-2 text-3xl font-semibold text-[#F1BE48]">
             Descarga de datos
           </h1>
-          <p className="mt-2 text-neutral-500">
+          <p className="mt-2 text-[#9A9A9A]">
             Exporta los indicadores del período seleccionado en formato Excel.
           </p>
         </div>
@@ -109,7 +109,7 @@ export default async function ReportesPage({
           {hasAnyData && (
             <a
               href={`/api/download/all?anio=${anio}&mes=${mes}`}
-              className="flex items-center gap-2 rounded-xl bg-[#A9945D] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#7A673A]"
+              className="flex items-center gap-2 rounded-xl bg-[#238D80] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#205C40]"
             >
               <FileDown className="h-4 w-4" />
               Descargar todo
@@ -119,8 +119,8 @@ export default async function ReportesPage({
       </div>
 
       {/* Period label */}
-      <div className="flex items-center gap-2 text-sm text-neutral-500">
-        <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 font-medium text-neutral-700">
+      <div className="flex items-center gap-2 text-sm text-[#9A9A9A]">
+        <span className="rounded-full border border-[#222222] bg-[#111111] px-3 py-1 font-medium text-[#9A9A9A]">
           {periodo}
         </span>
         {hasAnyData ? (
@@ -134,7 +134,7 @@ export default async function ReportesPage({
               .join(" · ")}
           </span>
         ) : (
-          <span className="text-neutral-400">Sin datos para este período</span>
+          <span className="text-[#555555]">Sin datos para este período</span>
         )}
       </div>
 
@@ -150,8 +150,8 @@ export default async function ReportesPage({
               className={[
                 "rounded-3xl border p-6 transition",
                 empty
-                  ? "border-dashed border-neutral-200 bg-neutral-50"
-                  : "border-neutral-200 bg-white shadow-sm",
+                  ? "border-dashed border-[#222222] bg-[#1A1A1A]"
+                  : "border-[#222222] bg-[#111111] ",
               ].join(" ")}
             >
               <div className="mb-5 flex items-start justify-between">
@@ -159,8 +159,8 @@ export default async function ReportesPage({
                   className={[
                     "rounded-2xl p-3",
                     empty
-                      ? "bg-neutral-100 text-neutral-300"
-                      : "bg-[#A9945D]/10 text-[#7A673A]",
+                      ? "bg-white/5 text-neutral-300"
+                      : "bg-[#238D80]/10 text-[#205C40]",
                   ].join(" ")}
                 >
                   <Icon className="h-5 w-5" />
@@ -172,23 +172,23 @@ export default async function ReportesPage({
                 )}
               </div>
 
-              <h3 className="text-base font-semibold text-neutral-950">{m.label}</h3>
-              <p className="mt-1 text-sm text-neutral-500">{m.desc}</p>
+              <h3 className="text-base font-semibold text-[#F1BE48]">{m.label}</h3>
+              <p className="mt-1 text-sm text-[#9A9A9A]">{m.desc}</p>
 
-              <div className="mt-4 border-t border-neutral-100 pt-4">
+              <div className="mt-4 border-t border-[#222222] pt-4">
                 {empty ? (
-                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                  <div className="flex items-center gap-2 text-sm text-[#555555]">
                     <PackageOpen className="h-4 w-4" />
                     Sin datos para {periodo}
                   </div>
                 ) : (
                   <div className="space-y-1">
-                    <p className="text-sm text-neutral-500">
-                      <span className="font-medium text-neutral-950">{m.count}</span>{" "}
+                    <p className="text-sm text-[#9A9A9A]">
+                      <span className="font-medium text-[#F1BE48]">{m.count}</span>{" "}
                       {m.countLabel}
                     </p>
                     {m.last && (
-                      <p className="text-xs text-neutral-400">
+                      <p className="text-xs text-[#555555]">
                         Última carga: {fmtDate(m.last.createdAt)}
                       </p>
                     )}
@@ -201,8 +201,8 @@ export default async function ReportesPage({
                 className={[
                   "mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition",
                   empty
-                    ? "cursor-not-allowed border border-neutral-200 text-neutral-300"
-                    : "border border-[#A9945D]/30 bg-[#A9945D]/5 text-[#7A673A] hover:bg-[#A9945D]/10",
+                    ? "cursor-not-allowed border border-[#222222] text-neutral-300"
+                    : "border border-[#238D80]/30 bg-[#238D80]/5 text-[#205C40] hover:bg-[#238D80]/10",
                 ].join(" ")}
                 aria-disabled={empty}
                 onClick={empty ? (e) => e.preventDefault() : undefined}
@@ -217,8 +217,8 @@ export default async function ReportesPage({
 
       {/* Recent uploads summary */}
       {lastUploads.length > 0 && (
-        <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-neutral-950">
+        <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6 ">
+          <h2 className="mb-4 text-base font-semibold text-[#F1BE48]">
             Última carga por módulo
           </h2>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -232,22 +232,22 @@ export default async function ReportesPage({
               return (
                 <div
                   key={mod}
-                  className="rounded-2xl border border-neutral-100 bg-neutral-50 p-4"
+                  className="rounded-2xl border border-[#222222] bg-[#1A1A1A] p-4"
                 >
-                  <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#555555]">
                     {labels[mod]}
                   </p>
                   {u ? (
                     <>
-                      <p className="mt-1 text-sm font-medium text-neutral-950">
+                      <p className="mt-1 text-sm font-medium text-[#F1BE48]">
                         {fmtDate(u.createdAt)}
                       </p>
-                      <p className="mt-0.5 truncate text-xs text-neutral-400">
+                      <p className="mt-0.5 truncate text-xs text-[#555555]">
                         {u.fileName} · {u.rows} filas
                       </p>
                     </>
                   ) : (
-                    <p className="mt-1 text-sm text-neutral-400">Sin cargas</p>
+                    <p className="mt-1 text-sm text-[#555555]">Sin cargas</p>
                   )}
                 </div>
               );

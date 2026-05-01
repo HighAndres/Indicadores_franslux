@@ -58,7 +58,7 @@ export function DashboardShell({
   }, [resetTimers]);
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5]">
+    <div className="min-h-screen bg-black">
       {/* Mobile backdrop */}
       {sidebarOpen && (
         <div

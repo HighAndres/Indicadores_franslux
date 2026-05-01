@@ -22,26 +22,26 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
   return (
     <aside
       className={[
-        "fixed left-0 top-0 z-50 h-screen w-72 border-r border-neutral-200 bg-white transition-transform duration-300 ease-in-out",
+        "fixed left-0 top-0 z-50 h-screen w-72 border-r border-[#222222] bg-black transition-transform duration-300 ease-in-out",
         "lg:translate-x-0",
         isOpen ? "translate-x-0" : "-translate-x-full",
       ].join(" ")}
     >
       <div className="flex h-full flex-col">
         {/* Logo + close button */}
-        <div className="border-b border-neutral-200 px-6 py-6">
+        <div className="border-b border-[#222222] px-6 py-6">
           <div className="mb-1 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img
-                src={brandConfig.logo}
+                src={brandConfig.logoDark}
                 alt={brandConfig.clientName}
                 className="h-10 w-auto"
               />
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-neutral-400">
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#9A9A9A]">
                   {brandConfig.clientName}
                 </p>
-                <h1 className="text-lg font-semibold text-neutral-900">
+                <h1 className="text-lg font-semibold text-[#F1BE48]">
                   {brandConfig.appName}
                 </h1>
               </div>
@@ -50,13 +50,13 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
             {/* Close button — mobile only */}
             <button
               onClick={onClose}
-              className="rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 lg:hidden"
+              className="rounded-lg p-1.5 text-[#9A9A9A] transition hover:bg-white/5 lg:hidden"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
-          <p className="mt-3 text-sm leading-5 text-neutral-500">
+          <p className="mt-3 text-sm leading-5 text-[#9A9A9A]">
             {brandConfig.tagline}
           </p>
         </div>
@@ -77,8 +77,8 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
                 className={[
                   "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition",
                   isActive
-                    ? "bg-[#A9945D]/10 text-[#7A673A]"
-                    : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950",
+                    ? "bg-[#F1BE48]/10 text-[#F1BE48]"
+                    : "text-[#9A9A9A] hover:bg-white/5 hover:text-[#F1BE48]",
                 ].join(" ")}
               >
                 <Icon className="h-5 w-5 shrink-0" />
@@ -89,9 +89,9 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-neutral-200 px-6 py-5">
-          <p className="text-xs text-neutral-400">Desarrollado por</p>
-          <p className="text-sm font-semibold text-neutral-800">Mirmibug</p>
+        <div className="border-t border-[#222222] px-6 py-5">
+          <p className="text-xs text-[#9A9A9A]">Desarrollado por</p>
+          <p className="text-sm font-semibold text-[#F1BE48]">Mirmibug</p>
         </div>
       </div>
     </aside>

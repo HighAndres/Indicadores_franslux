@@ -27,6 +27,8 @@ interface Props {
 
 type Tab = "forecast" | "hc" | "comercial";
 
+const CHART_COLORS = ["#238D80", "#00859B", "#003057", "#205C40"];
+
 const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
 const fmt = (v: number) =>
@@ -46,13 +48,22 @@ const TABS = [
   { key: "comercial" as Tab, label: "Comercial" },
 ];
 
+const tooltipStyle = {
+  borderRadius: 12,
+  border: "1px solid #222222",
+  backgroundColor: "#111111",
+  color: "#F1BE48",
+};
+
+const axisProps = { fontSize: 11, fill: "#9A9A9A" };
+
 export function HistoricosClient({ forecast, hc, comercial }: Props) {
   const [tab, setTab] = useState<Tab>("forecast");
 
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="flex gap-1 rounded-2xl border border-neutral-200 bg-white p-1.5 shadow-sm w-fit">
+      <div className="flex gap-1 rounded-2xl border border-[#222222] bg-[#111111] p-1.5 w-fit">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -60,8 +71,8 @@ export function HistoricosClient({ forecast, hc, comercial }: Props) {
             className={[
               "rounded-xl px-5 py-2 text-sm font-medium transition",
               tab === t.key
-                ? "bg-[#A9945D] text-white shadow-sm"
-                : "text-neutral-500 hover:text-neutral-950",
+                ? "bg-[#F1BE48] text-black shadow-sm"
+                : "text-[#9A9A9A] hover:text-[#F1BE48]",
             ].join(" ")}
           >
             {t.label}
@@ -91,32 +102,29 @@ function ForecastView({ data }: { data: ForecastPeriod[] }) {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-        <h3 className="mb-5 text-sm font-semibold text-neutral-950">
+      <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
+        <h3 className="mb-5 text-sm font-semibold text-[#F1BE48]">
           Gasto real vs presupuesto — tendencia mensual
         </h3>
         <ResponsiveContainer width="100%" height={280}>
           <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="gradReal" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#A9945D" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="#A9945D" stopOpacity={0} />
+                <stop offset="5%" stopColor={CHART_COLORS[0]} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={CHART_COLORS[0]} stopOpacity={0} />
               </linearGradient>
               <linearGradient id="gradPres" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#CBD5E1" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#CBD5E1" stopOpacity={0} />
+                <stop offset="5%" stopColor={CHART_COLORS[1]} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={CHART_COLORS[1]} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F1F1EF" />
-            <XAxis dataKey="period" tick={{ fontSize: 11, fill: "#6B7280" }} />
-            <YAxis tick={{ fontSize: 11, fill: "#6B7280" }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
-            <Tooltip
-              formatter={(v: unknown) => [fmt(v as number)]}
-              contentStyle={{ borderRadius: 12, border: "1px solid #E5E7EB" }}
-            />
+            <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
+            <XAxis dataKey="period" tick={axisProps} />
+            <YAxis tick={axisProps} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+            <Tooltip formatter={(v: unknown) => [fmt(v as number)]} contentStyle={tooltipStyle} />
             <Legend />
-            <Area type="monotone" dataKey="Real" stroke="#A9945D" strokeWidth={2} fill="url(#gradReal)" />
-            <Area type="monotone" dataKey="Presupuesto" stroke="#94A3B8" strokeWidth={2} fill="url(#gradPres)" />
+            <Area type="monotone" dataKey="Real" stroke={CHART_COLORS[0]} strokeWidth={2} fill="url(#gradReal)" />
+            <Area type="monotone" dataKey="Presupuesto" stroke={CHART_COLORS[1]} strokeWidth={2} fill="url(#gradPres)" />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -131,7 +139,7 @@ function ForecastView({ data }: { data: ForecastPeriod[] }) {
             cells: [
               <PeriodLink key="p" anio={d.anio} mes={d.mes} module="forecast" />,
               fmt(d.real),
-              <span key="pr" className="text-neutral-400">{fmt(d.presupuesto)}</span>,
+              <span key="pr" className="text-[#9A9A9A]">{fmt(d.presupuesto)}</span>,
               <Pct key="pct" value={pct} />,
             ],
           };
@@ -156,21 +164,21 @@ function HcView({ data }: { data: HcPeriod[] }) {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-        <h3 className="mb-5 text-sm font-semibold text-neutral-950">
+      <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
+        <h3 className="mb-5 text-sm font-semibold text-[#F1BE48]">
           Colaboradores, altas y bajas — tendencia mensual
         </h3>
         <ResponsiveContainer width="100%" height={280}>
           <ComposedChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F1F1EF" />
-            <XAxis dataKey="period" tick={{ fontSize: 11, fill: "#6B7280" }} />
-            <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "#6B7280" }} />
-            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "#6B7280" }} />
-            <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #E5E7EB" }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
+            <XAxis dataKey="period" tick={axisProps} />
+            <YAxis yAxisId="left" tick={axisProps} />
+            <YAxis yAxisId="right" orientation="right" tick={axisProps} />
+            <Tooltip contentStyle={tooltipStyle} />
             <Legend />
-            <Bar yAxisId="right" dataKey="Altas" fill="#4ADE80" radius={[4,4,0,0]} />
-            <Bar yAxisId="right" dataKey="Bajas" fill="#F87171" radius={[4,4,0,0]} />
-            <Line yAxisId="left" type="monotone" dataKey="Total" stroke="#A9945D" strokeWidth={2} dot={{ r: 4, fill: "#A9945D" }} />
+            <Bar yAxisId="right" dataKey="Altas" fill={CHART_COLORS[0]} radius={[4,4,0,0]} />
+            <Bar yAxisId="right" dataKey="Bajas" fill={CHART_COLORS[2]} radius={[4,4,0,0]} />
+            <Line yAxisId="left" type="monotone" dataKey="Total" stroke={CHART_COLORS[1]} strokeWidth={2} dot={{ r: 4, fill: CHART_COLORS[1] }} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
@@ -185,8 +193,8 @@ function HcView({ data }: { data: HcPeriod[] }) {
             cells: [
               <PeriodLink key="p" anio={d.anio} mes={d.mes} module="hc" />,
               d.total.toLocaleString("es-MX"),
-              <span key="a" className="font-medium text-emerald-600">+{d.altas}</span>,
-              <span key="b" className="font-medium text-red-500">-{d.bajas}</span>,
+              <span key="a" className="font-medium text-emerald-400">+{d.altas}</span>,
+              <span key="b" className="font-medium text-red-400">-{d.bajas}</span>,
               <Pct key="r" value={rot} invert />,
               d.diasLaborados,
             ],
@@ -212,22 +220,19 @@ function ComercialView({ data }: { data: ComercialPeriod[] }) {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-        <h3 className="mb-5 text-sm font-semibold text-neutral-950">
+      <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
+        <h3 className="mb-5 text-sm font-semibold text-[#F1BE48]">
           Comisiones real vs presupuesto — tendencia mensual
         </h3>
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F1F1EF" />
-            <XAxis dataKey="period" tick={{ fontSize: 11, fill: "#6B7280" }} />
-            <YAxis tick={{ fontSize: 11, fill: "#6B7280" }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
-            <Tooltip
-              formatter={(v: unknown) => [fmt(v as number)]}
-              contentStyle={{ borderRadius: 12, border: "1px solid #E5E7EB" }}
-            />
+            <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
+            <XAxis dataKey="period" tick={axisProps} />
+            <YAxis tick={axisProps} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+            <Tooltip formatter={(v: unknown) => [fmt(v as number)]} contentStyle={tooltipStyle} />
             <Legend />
-            <Bar dataKey="Real" fill="#A9945D" radius={[4,4,0,0]} />
-            <Bar dataKey="Presupuesto" fill="#CBD5E1" radius={[4,4,0,0]} />
+            <Bar dataKey="Real" fill={CHART_COLORS[0]} radius={[4,4,0,0]} />
+            <Bar dataKey="Presupuesto" fill={CHART_COLORS[1]} radius={[4,4,0,0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -242,7 +247,7 @@ function ComercialView({ data }: { data: ComercialPeriod[] }) {
             cells: [
               <PeriodLink key="p" anio={d.anio} mes={d.mes} module="comercial" />,
               fmt(d.real),
-              <span key="pr" className="text-neutral-400">{fmt(d.presupuesto)}</span>,
+              <span key="pr" className="text-[#9A9A9A]">{fmt(d.presupuesto)}</span>,
               <Pct key="pct" value={pct} />,
             ],
           };
@@ -258,7 +263,7 @@ function PeriodLink({ anio, mes, module }: { anio: number; mes: number; module: 
   return (
     <Link
       href={`/dashboard/${module}?anio=${anio}&mes=${mes}`}
-      className="group inline-flex items-center gap-1.5 font-medium text-neutral-950 hover:text-[#A9945D]"
+      className="group inline-flex items-center gap-1.5 font-medium text-[#F1BE48] hover:text-[#D4A520]"
     >
       {periodLabel(anio, mes)}
       <ExternalLink className="h-3 w-3 opacity-0 transition group-hover:opacity-100" />
@@ -272,7 +277,7 @@ function Pct({ value, invert }: { value: number; invert?: boolean }) {
   return (
     <span className={[
       "font-semibold",
-      good ? "text-emerald-600" : warn ? "text-amber-600" : "text-red-500",
+      good ? "text-emerald-400" : warn ? "text-amber-400" : "text-red-400",
     ].join(" ")}>
       {value.toFixed(1)}%
     </span>
@@ -288,22 +293,22 @@ interface TableRow {
 
 function PeriodTable({ headers, rows }: { headers: string[]; rows: TableRow[] }) {
   return (
-    <div className="overflow-x-auto rounded-3xl border border-neutral-200 bg-white shadow-sm">
+    <div className="overflow-x-auto rounded-3xl border border-[#222222] bg-[#111111]">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-neutral-100">
+          <tr className="border-b border-[#222222]">
             {headers.map((h) => (
-              <th key={h} className="px-6 pb-3 pt-4 text-left font-medium text-neutral-500">
+              <th key={h} className="px-6 pb-3 pt-4 text-left font-medium text-[#9A9A9A]">
                 {h}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-50">
+        <tbody className="divide-y divide-[#1A1A1A]">
           {rows.map((row, i) => (
-            <tr key={i} className="hover:bg-neutral-50/50">
+            <tr key={i} className="hover:bg-white/5">
               {row.cells.map((cell, j) => (
-                <td key={j} className="px-6 py-3">
+                <td key={j} className="px-6 py-3 text-[#F1BE48]">
                   {cell}
                 </td>
               ))}
@@ -317,8 +322,8 @@ function PeriodTable({ headers, rows }: { headers: string[]; rows: TableRow[] })
 
 function Empty() {
   return (
-    <div className="rounded-3xl border border-dashed border-neutral-200 bg-white p-12 text-center">
-      <p className="text-neutral-400">No hay datos históricos para este módulo.</p>
+    <div className="rounded-3xl border border-dashed border-[#222222] bg-[#111111] p-12 text-center">
+      <p className="text-[#9A9A9A]">No hay datos históricos para este módulo.</p>
     </div>
   );
 }
