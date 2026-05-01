@@ -60,7 +60,7 @@ export default async function ComercialPage({
         </div>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-5 sm:grid-cols-4">
         <KpiCard
           label="Comisiones reales"
           value={fmt(totalReal)}
