@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  CLIENT_ADMIN
+  CLIENT_USER
+}
+
+enum DataModule {
+  FORECAST
+  HC
+  COMERCIAL
+}
+
+model Client {
+  id       String  @id @default(cuid())
+  name     String
+  slug     String  @unique
+  logoUrl  String?
+  color    String?
+  isActive Boolean @default(true)
+
+  users     User[]
+  forecast  ForecastGasto[]
+  hc        HcColaboradores[]
+  comercial ComercialComision[]
+  uploads   DataUpload[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id           String  @id @default(cuid())
+  clientId     String
+  name         String
+  email        String  @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean @default(true)
+
+  client  Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  uploads DataUpload[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+}
+
+model ForecastGasto {
+  id          String @id @default(cuid())
+  clientId    String
+  anio        Int
+  mes         Int
+  direccion   String
+  area        String
+  real        Float
+  presupuesto Float
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId, anio, mes])
+  @@index([clientId, direccion])
+  @@index([clientId, area])
+}
+
+model HcColaboradores {
+  id            String @id @default(cuid())
+  clientId      String
+  anio          Int
+  mes           Int
+  total         Int
+  altas         Int
+  bajas         Int
+  diasLaborados Int
+  generoM       Int
+  generoF       Int
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clientId, anio, mes])
+  @@index([clientId])
+}
+
+model ComercialComision {
+  id          String @id @default(cuid())
+  clientId    String
+  anio        Int
+  mes         Int
+  cadena      String
+  kam         String
+  tienda      String
+  real        Float
+  presupuesto Float
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId, anio, mes])
+  @@index([clientId, cadena])
+  @@index([clientId, kam])
+  @@index([clientId, tienda])
+}
+
+model DataUpload {
+  id       String     @id @default(cuid())
+  clientId String
+  userId   String
+  module   DataModule
+  anio     Int
+  mes      Int
+  fileName String
+  rows     Int
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([clientId, module, anio, mes])
+}
