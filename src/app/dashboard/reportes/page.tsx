@@ -12,9 +12,7 @@ const MESES = [
 
 function fmtDate(d: Date) {
   return d.toLocaleDateString("es-MX", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
+    day: "2-digit", month: "short", year: "numeric",
   });
 }
 
@@ -31,24 +29,24 @@ export default async function ReportesPage({
   const mes = parseInt(mesStr ?? "4");
   const clientId = session.user.clientId;
 
-  const [forecastCount, hcRecord, comercialCount, lastUploads] = await Promise.all([
+  const [forecastCount, historicoData, comisionData, lastUpload] = await Promise.all([
     prisma.forecastGasto.count({ where: { clientId, anio, mes } }),
-    prisma.hcColaboradores.findUnique({
-      where: { clientId_anio_mes: { clientId, anio, mes } },
-      select: { total: true },
+    prisma.historicoData.findMany({
+      where: { clientId, anio, mes },
+      select: { hcReal: true },
     }),
-    prisma.comercialComision.count({ where: { clientId, anio, mes } }),
-    prisma.dataUpload.findMany({
+    prisma.comisionMensual.findUnique({
+      where: { clientId_anio_mes: { clientId, anio, mes } },
+      select: { realCosto: true },
+    }),
+    prisma.dataUpload.findFirst({
       where: { clientId },
       orderBy: { createdAt: "desc" },
-      distinct: ["module"],
-      select: { module: true, createdAt: true, fileName: true, rows: true },
+      select: { createdAt: true, fileName: true, sheets: true },
     }),
   ]);
 
-  const lastByModule = Object.fromEntries(
-    lastUploads.map((u) => [u.module, u])
-  );
+  const totalHc = historicoData.reduce((s, r) => s + r.hcReal, 0);
 
   const periodo = `${MESES[mes - 1]} ${anio}`;
 
@@ -56,36 +54,33 @@ export default async function ReportesPage({
     {
       key: "forecast",
       label: "Forecast",
-      desc: "Gasto real vs presupuesto por dirección y área",
+      desc: "Budget vs Forecast por dirección y área",
       icon: LineChart,
       count: forecastCount,
       countLabel: forecastCount === 1 ? "registro" : "registros",
-      last: lastByModule["FORECAST"],
       href: `/api/download/forecast?anio=${anio}&mes=${mes}`,
     },
     {
       key: "hc",
       label: "Headcount",
-      desc: "Colaboradores, altas, bajas, rotación y género",
+      desc: "HC presupuestado vs real, altas y bajas por población",
       icon: UserRound,
-      count: hcRecord ? 1 : 0,
-      countLabel: hcRecord ? `${hcRecord.total} colaboradores` : "sin datos",
-      last: lastByModule["HC"],
+      count: historicoData.length,
+      countLabel: totalHc > 0 ? `${totalHc} colaboradores` : "sin datos",
       href: `/api/download/hc?anio=${anio}&mes=${mes}`,
     },
     {
       key: "comercial",
-      label: "Comercial",
-      desc: "Comisiones por cadena, KAM y tienda",
+      label: "Comisiones",
+      desc: "HC proyectado vs real y costos mensuales",
       icon: BarChart3,
-      count: comercialCount,
-      countLabel: comercialCount === 1 ? "registro" : "registros",
-      last: lastByModule["COMERCIAL"],
+      count: comisionData ? 1 : 0,
+      countLabel: comisionData ? "datos disponibles" : "sin datos",
       href: `/api/download/comercial?anio=${anio}&mes=${mes}`,
     },
   ];
 
-  const hasAnyData = forecastCount > 0 || hcRecord !== null || comercialCount > 0;
+  const hasAnyData = forecastCount > 0 || historicoData.length > 0 || comisionData !== null;
 
   return (
     <div className="space-y-8">
@@ -118,27 +113,17 @@ export default async function ReportesPage({
         </div>
       </div>
 
-      {/* Period label */}
       <div className="flex items-center gap-2 text-sm text-[#9A9A9A]">
         <span className="rounded-full border border-[#222222] bg-[#111111] px-3 py-1 font-medium text-[#9A9A9A]">
           {periodo}
         </span>
-        {hasAnyData ? (
-          <span>
-            {[
-              forecastCount > 0 && `${forecastCount} filas de Forecast`,
-              hcRecord && "HC disponible",
-              comercialCount > 0 && `${comercialCount} filas de Comercial`,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
+        {lastUpload && (
+          <span className="text-[#555555]">
+            Última carga: {fmtDate(lastUpload.createdAt)} · {lastUpload.fileName}
           </span>
-        ) : (
-          <span className="text-[#555555]">Sin datos para este período</span>
         )}
       </div>
 
-      {/* Module cards */}
       <div className="grid gap-5 sm:grid-cols-3">
         {modules.map((m) => {
           const Icon = m.icon;
@@ -151,16 +136,14 @@ export default async function ReportesPage({
                 "rounded-3xl border p-6 transition",
                 empty
                   ? "border-dashed border-[#222222] bg-[#1A1A1A]"
-                  : "border-[#222222] bg-[#111111] ",
+                  : "border-[#222222] bg-[#111111]",
               ].join(" ")}
             >
               <div className="mb-5 flex items-start justify-between">
                 <div
                   className={[
                     "rounded-2xl p-3",
-                    empty
-                      ? "bg-white/5 text-neutral-300"
-                      : "bg-[#238D80]/10 text-[#205C40]",
+                    empty ? "bg-white/5 text-neutral-300" : "bg-[#238D80]/10 text-[#205C40]",
                   ].join(" ")}
                 >
                   <Icon className="h-5 w-5" />
@@ -182,17 +165,10 @@ export default async function ReportesPage({
                     Sin datos para {periodo}
                   </div>
                 ) : (
-                  <div className="space-y-1">
-                    <p className="text-sm text-[#9A9A9A]">
-                      <span className="font-medium text-[#F1BE48]">{m.count}</span>{" "}
-                      {m.countLabel}
-                    </p>
-                    {m.last && (
-                      <p className="text-xs text-[#555555]">
-                        Última carga: {fmtDate(m.last.createdAt)}
-                      </p>
-                    )}
-                  </div>
+                  <p className="text-sm text-[#9A9A9A]">
+                    <span className="font-medium text-[#F1BE48]">{m.count}</span>{" "}
+                    {m.countLabel}
+                  </p>
                 )}
               </div>
 
@@ -214,47 +190,6 @@ export default async function ReportesPage({
           );
         })}
       </div>
-
-      {/* Recent uploads summary */}
-      {lastUploads.length > 0 && (
-        <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6 ">
-          <h2 className="mb-4 text-base font-semibold text-[#F1BE48]">
-            Última carga por módulo
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {(["FORECAST", "HC", "COMERCIAL"] as const).map((mod) => {
-              const u = lastByModule[mod];
-              const labels: Record<string, string> = {
-                FORECAST: "Forecast",
-                HC: "Headcount",
-                COMERCIAL: "Comercial",
-              };
-              return (
-                <div
-                  key={mod}
-                  className="rounded-2xl border border-[#222222] bg-[#1A1A1A] p-4"
-                >
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#555555]">
-                    {labels[mod]}
-                  </p>
-                  {u ? (
-                    <>
-                      <p className="mt-1 text-sm font-medium text-[#F1BE48]">
-                        {fmtDate(u.createdAt)}
-                      </p>
-                      <p className="mt-0.5 truncate text-xs text-[#555555]">
-                        {u.fileName} · {u.rows} filas
-                      </p>
-                    </>
-                  ) : (
-                    <p className="mt-1 text-sm text-[#555555]">Sin cargas</p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

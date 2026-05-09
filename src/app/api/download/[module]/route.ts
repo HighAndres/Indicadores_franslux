@@ -8,53 +8,54 @@ type SheetData = Record<string, unknown>[];
 async function getForecastRows(clientId: string, anio: number, mes: number): Promise<SheetData> {
   const data = await prisma.forecastGasto.findMany({
     where: { clientId, anio, mes },
-    orderBy: { real: "desc" },
+    orderBy: { forecast: "desc" },
   });
   return data.map((r) => ({
     Año: r.anio,
     Mes: r.mes,
     Dirección: r.direccion,
     Área: r.area,
-    Real: r.real,
-    Presupuesto: r.presupuesto,
-    "% Ejecución": r.presupuesto > 0 ? ((r.real / r.presupuesto) * 100).toFixed(1) + "%" : "N/A",
+    Budget: r.budget,
+    Forecast: r.forecast,
+    "% Var.": r.budget > 0 ? ((r.forecast / r.budget) * 100).toFixed(1) + "%" : "N/A",
+    "HC Budget": r.hcBudget,
+    "HC Forecast": r.hcForecast,
   }));
 }
 
 async function getHcRows(clientId: string, anio: number, mes: number): Promise<SheetData> {
-  const data = await prisma.hcColaboradores.findUnique({
-    where: { clientId_anio_mes: { clientId, anio, mes } },
-  });
-  if (!data) return [];
-  return [
-    {
-      Año: data.anio,
-      Mes: data.mes,
-      "Total colaboradores": data.total,
-      Altas: data.altas,
-      Bajas: data.bajas,
-      "Días laborados": data.diasLaborados,
-      Masculino: data.generoM,
-      Femenino: data.generoF,
-      "% Rotación": data.total > 0 ? ((data.bajas / data.total) * 100).toFixed(1) + "%" : "N/A",
-    },
-  ];
-}
-
-async function getComercialRows(clientId: string, anio: number, mes: number): Promise<SheetData> {
-  const data = await prisma.comercialComision.findMany({
+  const data = await prisma.historicoData.findMany({
     where: { clientId, anio, mes },
-    orderBy: { real: "desc" },
   });
   return data.map((r) => ({
     Año: r.anio,
     Mes: r.mes,
-    Cadena: r.cadena,
-    KAM: r.kam,
-    Tienda: r.tienda,
+    Población: r.poblacion,
+    "HC Presupuestado": r.hcPresupuesto,
+    "HC Real": r.hcReal,
+    Forecast: r.forecast,
     Real: r.real,
-    Presupuesto: r.presupuesto,
-    "% Ejecución": r.presupuesto > 0 ? ((r.real / r.presupuesto) * 100).toFixed(1) + "%" : "N/A",
+    Budget: r.budget,
+    Altas: r.altas,
+    Bajas: r.bajas,
+    "% Rotación": r.hcReal > 0 ? ((r.bajas / r.hcReal) * 100).toFixed(1) + "%" : "N/A",
+  }));
+}
+
+async function getComercialRows(clientId: string, anio: number, mes: number): Promise<SheetData> {
+  const data = await prisma.comisionMensual.findMany({
+    where: { clientId, anio },
+    orderBy: { mes: "asc" },
+  });
+  return data.map((r) => ({
+    Año: r.anio,
+    Mes: r.mes,
+    "HC Proyectado": r.hcProyectado,
+    Presupuestado: r.presupuestado,
+    "HC Real": r.realHc,
+    "Costo Real": r.realCosto,
+    "Var HC": r.realHc - r.hcProyectado,
+    "% Ejecución": r.presupuestado > 0 ? ((r.realCosto / r.presupuestado) * 100).toFixed(1) + "%" : "N/A",
   }));
 }
 
@@ -99,8 +100,8 @@ export async function GET(
   }
 
   if (module === "comercial") {
-    addSheet(wb, await getComercialRows(clientId, anio, mes), "Comercial");
-    return toResponse(wb, `comercial_${anio}_${pad(mes)}.xlsx`);
+    addSheet(wb, await getComercialRows(clientId, anio, mes), "Comisiones");
+    return toResponse(wb, `comisiones_${anio}.xlsx`);
   }
 
   if (module === "all") {
@@ -111,7 +112,7 @@ export async function GET(
     ]);
     addSheet(wb, forecast, "Forecast");
     addSheet(wb, hc, "Headcount");
-    addSheet(wb, comercial, "Comercial");
+    addSheet(wb, comercial, "Comisiones");
     return toResponse(wb, `reporte_completo_${anio}_${pad(mes)}.xlsx`);
   }
 

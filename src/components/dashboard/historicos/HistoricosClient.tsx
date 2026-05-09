@@ -8,61 +8,58 @@ import {
 } from "recharts";
 import { ExternalLink } from "lucide-react";
 
-export interface ForecastPeriod {
-  anio: number; mes: number; real: number; presupuesto: number;
+interface HistoricoPeriod {
+  anio: number; mes: number;
+  hcPresupuesto: number; hcReal: number;
+  forecast: number; real: number; budget: number;
+  altas: number; bajas: number;
 }
-export interface HcPeriod {
-  anio: number; mes: number; total: number; altas: number;
-  bajas: number; generoM: number; generoF: number; diasLaborados: number;
-}
-export interface ComercialPeriod {
-  anio: number; mes: number; real: number; presupuesto: number;
+
+interface ComisionPeriod {
+  anio: number; mes: number;
+  hcProyectado: number; presupuestado: number;
+  realHc: number; realCosto: number;
 }
 
 interface Props {
-  forecast: ForecastPeriod[];
-  hc: HcPeriod[];
-  comercial: ComercialPeriod[];
+  historico: HistoricoPeriod[];
+  comisiones: ComisionPeriod[];
 }
 
-type Tab = "forecast" | "hc" | "comercial";
+type Tab = "costos" | "hc" | "comisiones";
 
 const CHART_COLORS = ["#238D80", "#00859B", "#003057", "#205C40"];
-
 const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
 const fmt = (v: number) =>
   new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(v);
 
-function periodLabel(anio: number, mes: number) {
-  return `${MESES[mes - 1]} ${anio}`;
-}
-
 function toChartKey(anio: number, mes: number) {
   return `${MESES[mes - 1]}\n${anio}`;
 }
 
+function periodLabel(anio: number, mes: number) {
+  return `${MESES[mes - 1]} ${anio}`;
+}
+
 const TABS = [
-  { key: "forecast" as Tab, label: "Forecast" },
-  { key: "hc" as Tab,       label: "Headcount" },
-  { key: "comercial" as Tab, label: "Comercial" },
+  { key: "costos" as Tab, label: "Costos" },
+  { key: "hc" as Tab, label: "Headcount" },
+  { key: "comisiones" as Tab, label: "Comisiones" },
 ];
 
 const tooltipStyle = {
-  borderRadius: 12,
-  border: "1px solid #222222",
-  backgroundColor: "#111111",
-  color: "#F1BE48",
+  borderRadius: 12, border: "1px solid #222222",
+  backgroundColor: "#111111", color: "#F1BE48",
 };
 
 const axisProps = { fontSize: 11, fill: "#9A9A9A" };
 
-export function HistoricosClient({ forecast, hc, comercial }: Props) {
-  const [tab, setTab] = useState<Tab>("forecast");
+export function HistoricosClient({ historico, comisiones }: Props) {
+  const [tab, setTab] = useState<Tab>("costos");
 
   return (
     <div className="space-y-6">
-      {/* Tabs */}
       <div className="flex gap-1 rounded-2xl border border-[#222222] bg-[#111111] p-1.5 w-fit">
         {TABS.map((t) => (
           <button
@@ -80,31 +77,26 @@ export function HistoricosClient({ forecast, hc, comercial }: Props) {
         ))}
       </div>
 
-      {tab === "forecast" && <ForecastView data={forecast} />}
-      {tab === "hc"       && <HcView data={hc} />}
-      {tab === "comercial" && <ComercialView data={comercial} />}
+      {tab === "costos" && <CostosView data={historico} />}
+      {tab === "hc" && <HcView data={historico} />}
+      {tab === "comisiones" && <ComisionesView data={comisiones} />}
     </div>
   );
 }
 
-/* ── FORECAST ── */
-function ForecastView({ data }: { data: ForecastPeriod[] }) {
+function CostosView({ data }: { data: HistoricoPeriod[] }) {
   if (data.length === 0) return <Empty />;
 
   const chartData = data.map((d) => ({
     period: toChartKey(d.anio, d.mes),
-    Real: d.real,
-    Presupuesto: d.presupuesto,
-    pct: d.presupuesto > 0 ? +((d.real / d.presupuesto) * 100).toFixed(1) : 0,
-    anio: d.anio,
-    mes: d.mes,
+    Real: d.real, Forecast: d.forecast, Budget: d.budget,
   }));
 
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
         <h3 className="mb-5 text-sm font-semibold text-[#F1BE48]">
-          Gasto real vs presupuesto — tendencia mensual
+          Real vs Forecast vs Budget — tendencia mensual
         </h3>
         <ResponsiveContainer width="100%" height={280}>
           <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -113,60 +105,48 @@ function ForecastView({ data }: { data: ForecastPeriod[] }) {
                 <stop offset="5%" stopColor={CHART_COLORS[0]} stopOpacity={0.3} />
                 <stop offset="95%" stopColor={CHART_COLORS[0]} stopOpacity={0} />
               </linearGradient>
-              <linearGradient id="gradPres" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={CHART_COLORS[1]} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={CHART_COLORS[1]} stopOpacity={0} />
-              </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
             <XAxis dataKey="period" tick={axisProps} />
-            <YAxis tick={axisProps} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+            <YAxis tick={axisProps} tickFormatter={(v) => `$${(v/1_000_000).toFixed(1)}M`} />
             <Tooltip formatter={(v: unknown) => [fmt(v as number)]} contentStyle={tooltipStyle} />
             <Legend />
             <Area type="monotone" dataKey="Real" stroke={CHART_COLORS[0]} strokeWidth={2} fill="url(#gradReal)" />
-            <Area type="monotone" dataKey="Presupuesto" stroke={CHART_COLORS[1]} strokeWidth={2} fill="url(#gradPres)" />
+            <Area type="monotone" dataKey="Forecast" stroke={CHART_COLORS[1]} strokeWidth={2} fill="transparent" />
+            <Area type="monotone" dataKey="Budget" stroke={CHART_COLORS[2]} strokeWidth={2} fill="transparent" />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
       <PeriodTable
-        headers={["Período", "Real", "Presupuesto", "% Ejec."]}
-        rows={data.map((d) => {
-          const pct = d.presupuesto > 0 ? (d.real / d.presupuesto) * 100 : 0;
-          return {
-            anio: d.anio, mes: d.mes,
-            module: "forecast",
-            cells: [
-              <PeriodLink key="p" anio={d.anio} mes={d.mes} module="forecast" />,
-              fmt(d.real),
-              <span key="pr" className="text-[#9A9A9A]">{fmt(d.presupuesto)}</span>,
-              <Pct key="pct" value={pct} />,
-            ],
-          };
-        })}
+        headers={["Período", "Real", "Forecast", "Budget"]}
+        rows={data.map((d) => ({
+          cells: [
+            <PeriodLink key="p" anio={d.anio} mes={d.mes} module="forecast" />,
+            fmt(d.real),
+            <span key="f" className="text-[#9A9A9A]">{fmt(d.forecast)}</span>,
+            <span key="b" className="text-[#9A9A9A]">{fmt(d.budget)}</span>,
+          ],
+        }))}
       />
     </div>
   );
 }
 
-/* ── HEADCOUNT ── */
-function HcView({ data }: { data: HcPeriod[] }) {
+function HcView({ data }: { data: HistoricoPeriod[] }) {
   if (data.length === 0) return <Empty />;
 
   const chartData = data.map((d) => ({
     period: toChartKey(d.anio, d.mes),
-    Total: d.total,
-    Altas: d.altas,
-    Bajas: d.bajas,
-    anio: d.anio,
-    mes: d.mes,
+    "HC Real": d.hcReal, "HC Presup.": d.hcPresupuesto,
+    Altas: d.altas, Bajas: d.bajas,
   }));
 
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
         <h3 className="mb-5 text-sm font-semibold text-[#F1BE48]">
-          Colaboradores, altas y bajas — tendencia mensual
+          HC y movimientos — tendencia mensual
         </h3>
         <ResponsiveContainer width="100%" height={280}>
           <ComposedChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -178,25 +158,24 @@ function HcView({ data }: { data: HcPeriod[] }) {
             <Legend />
             <Bar yAxisId="right" dataKey="Altas" fill={CHART_COLORS[0]} radius={[4,4,0,0]} />
             <Bar yAxisId="right" dataKey="Bajas" fill={CHART_COLORS[2]} radius={[4,4,0,0]} />
-            <Line yAxisId="left" type="monotone" dataKey="Total" stroke={CHART_COLORS[1]} strokeWidth={2} dot={{ r: 4, fill: CHART_COLORS[1] }} />
+            <Line yAxisId="left" type="monotone" dataKey="HC Real" stroke={CHART_COLORS[1]} strokeWidth={2} dot={{ r: 4, fill: CHART_COLORS[1] }} />
+            <Line yAxisId="left" type="monotone" dataKey="HC Presup." stroke={CHART_COLORS[3]} strokeWidth={2} strokeDasharray="5 5" dot={false} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
 
       <PeriodTable
-        headers={["Período", "Total", "Altas", "Bajas", "Rotación", "Días lab."]}
+        headers={["Período", "HC Presup.", "HC Real", "Altas", "Bajas", "Rotación"]}
         rows={data.map((d) => {
-          const rot = d.total > 0 ? (d.bajas / d.total) * 100 : 0;
+          const rot = d.hcReal > 0 ? (d.bajas / d.hcReal) * 100 : 0;
           return {
-            anio: d.anio, mes: d.mes,
-            module: "hc",
             cells: [
               <PeriodLink key="p" anio={d.anio} mes={d.mes} module="hc" />,
-              d.total.toLocaleString("es-MX"),
+              d.hcPresupuesto.toLocaleString("es-MX"),
+              d.hcReal.toLocaleString("es-MX"),
               <span key="a" className="font-medium text-emerald-400">+{d.altas}</span>,
               <span key="b" className="font-medium text-red-400">-{d.bajas}</span>,
               <Pct key="r" value={rot} invert />,
-              d.diasLaborados,
             ],
           };
         })}
@@ -205,49 +184,45 @@ function HcView({ data }: { data: HcPeriod[] }) {
   );
 }
 
-/* ── COMERCIAL ── */
-function ComercialView({ data }: { data: ComercialPeriod[] }) {
+function ComisionesView({ data }: { data: ComisionPeriod[] }) {
   if (data.length === 0) return <Empty />;
 
   const chartData = data.map((d) => ({
     period: toChartKey(d.anio, d.mes),
-    Real: d.real,
-    Presupuesto: d.presupuesto,
-    pct: d.presupuesto > 0 ? +((d.real / d.presupuesto) * 100).toFixed(1) : 0,
-    anio: d.anio,
-    mes: d.mes,
+    Presupuestado: d.presupuestado,
+    "Costo Real": d.realCosto,
   }));
 
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
         <h3 className="mb-5 text-sm font-semibold text-[#F1BE48]">
-          Comisiones real vs presupuesto — tendencia mensual
+          Costo presupuestado vs real — tendencia mensual
         </h3>
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
             <XAxis dataKey="period" tick={axisProps} />
-            <YAxis tick={axisProps} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+            <YAxis tick={axisProps} tickFormatter={(v) => `$${(v/1_000_000).toFixed(1)}M`} />
             <Tooltip formatter={(v: unknown) => [fmt(v as number)]} contentStyle={tooltipStyle} />
             <Legend />
-            <Bar dataKey="Real" fill={CHART_COLORS[0]} radius={[4,4,0,0]} />
-            <Bar dataKey="Presupuesto" fill={CHART_COLORS[1]} radius={[4,4,0,0]} />
+            <Bar dataKey="Presupuestado" fill={CHART_COLORS[2]} radius={[4,4,0,0]} />
+            <Bar dataKey="Costo Real" fill={CHART_COLORS[0]} radius={[4,4,0,0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
       <PeriodTable
-        headers={["Período", "Real", "Presupuesto", "% Ejec."]}
+        headers={["Período", "HC Proy.", "HC Real", "Presupuestado", "Costo Real", "% Ejec."]}
         rows={data.map((d) => {
-          const pct = d.presupuesto > 0 ? (d.real / d.presupuesto) * 100 : 0;
+          const pct = d.presupuestado > 0 ? (d.realCosto / d.presupuestado) * 100 : 0;
           return {
-            anio: d.anio, mes: d.mes,
-            module: "comercial",
             cells: [
               <PeriodLink key="p" anio={d.anio} mes={d.mes} module="comercial" />,
-              fmt(d.real),
-              <span key="pr" className="text-[#9A9A9A]">{fmt(d.presupuesto)}</span>,
+              d.hcProyectado.toLocaleString("es-MX"),
+              d.realHc.toLocaleString("es-MX"),
+              <span key="pr" className="text-[#9A9A9A]">{fmt(d.presupuestado)}</span>,
+              fmt(d.realCosto),
               <Pct key="pct" value={pct} />,
             ],
           };
@@ -256,8 +231,6 @@ function ComercialView({ data }: { data: ComercialPeriod[] }) {
     </div>
   );
 }
-
-/* ── shared sub-components ── */
 
 function PeriodLink({ anio, mes, module }: { anio: number; mes: number; module: string }) {
   return (
@@ -284,23 +257,14 @@ function Pct({ value, invert }: { value: number; invert?: boolean }) {
   );
 }
 
-interface TableRow {
-  anio: number;
-  mes: number;
-  module: string;
-  cells: React.ReactNode[];
-}
-
-function PeriodTable({ headers, rows }: { headers: string[]; rows: TableRow[] }) {
+function PeriodTable({ headers, rows }: { headers: string[]; rows: { cells: React.ReactNode[] }[] }) {
   return (
     <div className="overflow-x-auto rounded-3xl border border-[#222222] bg-[#111111]">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-[#222222]">
             {headers.map((h) => (
-              <th key={h} className="px-6 pb-3 pt-4 text-left font-medium text-[#9A9A9A]">
-                {h}
-              </th>
+              <th key={h} className="px-6 pb-3 pt-4 text-left font-medium text-[#9A9A9A]">{h}</th>
             ))}
           </tr>
         </thead>
@@ -308,9 +272,7 @@ function PeriodTable({ headers, rows }: { headers: string[]; rows: TableRow[] })
           {rows.map((row, i) => (
             <tr key={i} className="hover:bg-white/5">
               {row.cells.map((cell, j) => (
-                <td key={j} className="px-6 py-3 text-[#F1BE48]">
-                  {cell}
-                </td>
+                <td key={j} className="px-6 py-3 text-[#F1BE48]">{cell}</td>
               ))}
             </tr>
           ))}
@@ -323,7 +285,7 @@ function PeriodTable({ headers, rows }: { headers: string[]; rows: TableRow[] })
 function Empty() {
   return (
     <div className="rounded-3xl border border-dashed border-[#222222] bg-[#111111] p-12 text-center">
-      <p className="text-[#9A9A9A]">No hay datos históricos para este módulo.</p>
+      <p className="text-[#9A9A9A]">No hay datos históricos.</p>
     </div>
   );
 }

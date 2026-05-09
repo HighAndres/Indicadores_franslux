@@ -26,17 +26,16 @@ export default async function ComercialPage({
   const anio = parseInt(anioStr ?? "2026");
   const mes = parseInt(mesStr ?? "4");
 
-  const data = await prisma.comercialComision.findMany({
-    where: { clientId: session.user.clientId, anio, mes },
-    orderBy: { real: "desc" },
+  const data = await prisma.comisionMensual.findMany({
+    where: { clientId: session.user.clientId, anio },
+    orderBy: { mes: "asc" },
   });
 
-  const totalReal = data.reduce((s, r) => s + r.real, 0);
-  const totalPresupuesto = data.reduce((s, r) => s + r.presupuesto, 0);
+  const current = data.find((d) => d.mes === mes);
   const pctEjecucion =
-    totalPresupuesto > 0 ? (totalReal / totalPresupuesto) * 100 : 0;
-
-  const cadenas = new Set(data.map((r) => r.cadena)).size;
+    current && current.presupuestado > 0
+      ? (current.realCosto / current.presupuestado) * 100
+      : 0;
 
   return (
     <div className="space-y-8">
@@ -46,10 +45,10 @@ export default async function ComercialPage({
             Comercial
           </p>
           <h1 className="mt-2 text-3xl font-semibold text-[#F1BE48]">
-            Indicadores de comisiones
+            Comisiones y Headcount
           </h1>
           <p className="mt-2 text-[#9A9A9A]">
-            Real vs presupuesto por cadena, KAM y tienda.
+            HC proyectado vs real y costos presupuestados vs reales.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -60,34 +59,36 @@ export default async function ComercialPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-5 sm:grid-cols-4">
+      <div className="grid gap-5 sm:grid-cols-3">
         <KpiCard
-          label="Comisiones reales"
-          value={fmt(totalReal)}
-          subtitle={`${cadenas} cadenas`}
+          label="Costo Real"
+          value={current ? fmt(current.realCosto) : "—"}
         />
-        <KpiCard label="Presupuesto" value={fmt(totalPresupuesto)} />
+        <KpiCard
+          label="Presupuestado"
+          value={current ? fmt(current.presupuestado) : "—"}
+        />
         <KpiCard
           label="% Ejecución"
-          value={`${pctEjecucion.toFixed(1)}%`}
+          value={current ? `${pctEjecucion.toFixed(1)}%` : "—"}
           highlight
         />
-        <KpiCard label="Registros" value={data.length.toString()} />
       </div>
 
       {data.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-[#222222] bg-[#111111] p-12 text-center">
-          <p className="text-[#555555]">Sin datos para el período seleccionado.</p>
+          <p className="text-[#555555]">Sin datos para el año seleccionado.</p>
         </div>
       ) : (
         <ComercialCharts
           data={data.map((r) => ({
-            cadena: r.cadena,
-            kam: r.kam,
-            tienda: r.tienda,
-            real: r.real,
-            presupuesto: r.presupuesto,
+            mes: r.mes,
+            hcProyectado: r.hcProyectado,
+            presupuestado: r.presupuestado,
+            realHc: r.realHc,
+            realCosto: r.realCosto,
           }))}
+          selectedMes={mes}
         />
       )}
     </div>

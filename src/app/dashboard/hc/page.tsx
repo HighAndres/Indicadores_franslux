@@ -19,17 +19,15 @@ export default async function HcPage({
   const anio = parseInt(anioStr ?? "2026");
   const mes = parseInt(mesStr ?? "4");
 
-  const data = await prisma.hcColaboradores.findUnique({
-    where: {
-      clientId_anio_mes: {
-        clientId: session.user.clientId,
-        anio,
-        mes,
-      },
-    },
+  const data = await prisma.historicoData.findMany({
+    where: { clientId: session.user.clientId, anio, mes },
   });
 
-  const rotacion = data && data.total > 0 ? (data.bajas / data.total) * 100 : 0;
+  const totalHcReal = data.reduce((s, r) => s + r.hcReal, 0);
+  const totalHcPresup = data.reduce((s, r) => s + r.hcPresupuesto, 0);
+  const totalAltas = data.reduce((s, r) => s + r.altas, 0);
+  const totalBajas = data.reduce((s, r) => s + r.bajas, 0);
+  const rotacion = totalHcReal > 0 ? (totalBajas / totalHcReal) * 100 : 0;
 
   return (
     <div className="space-y-8">
@@ -42,7 +40,7 @@ export default async function HcPage({
             Métricas de colaboradores
           </h1>
           <p className="mt-2 text-[#9A9A9A]">
-            Total, altas, bajas, rotación, días laborados y equidad de género.
+            HC presupuestado vs real, altas, bajas y rotación por población.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -53,36 +51,36 @@ export default async function HcPage({
         </div>
       </div>
 
-      {!data ? (
+      {data.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-[#222222] bg-[#111111] p-12 text-center">
           <p className="text-[#555555]">Sin datos para el período seleccionado.</p>
         </div>
       ) : (
         <>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCard
-              label="Total colaboradores"
-              value={data.total.toLocaleString("es-MX")}
+              label="HC Real"
+              value={totalHcReal.toLocaleString("es-MX")}
             />
-            <KpiCard label="Altas" value={`+${data.altas}`} />
-            <KpiCard label="Bajas" value={`-${data.bajas}`} />
+            <KpiCard label="Altas" value={`+${totalAltas}`} />
+            <KpiCard label="Bajas" value={`-${totalBajas}`} />
             <KpiCard
               label="% Rotación"
               value={`${rotacion.toFixed(1)}%`}
               highlight
             />
-            <KpiCard
-              label="Días laborados"
-              value={data.diasLaborados.toString()}
-            />
           </div>
 
           <HcCharts
-            generoM={data.generoM}
-            generoF={data.generoF}
-            total={data.total}
-            altas={data.altas}
-            bajas={data.bajas}
+            data={data.map((r) => ({
+              poblacion: r.poblacion,
+              hcPresupuesto: r.hcPresupuesto,
+              hcReal: r.hcReal,
+              altas: r.altas,
+              bajas: r.bajas,
+            }))}
+            totalHcPresup={totalHcPresup}
+            totalHcReal={totalHcReal}
           />
         </>
       )}

@@ -3,29 +3,21 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canUploadData } from "@/lib/permissions";
-import type { Role, DataModule } from "@/generated/prisma/client";
+import type { Role } from "@/generated/prisma/client";
 import * as XLSX from "xlsx";
 
 export type UploadState = {
   success: boolean;
   message: string;
-  rows?: number;
 } | null;
 
-function norm(key: string) {
-  return key
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/\s+/g, "");
-}
+const MES_MAP: Record<string, number> = {
+  enero: 1, febrero: 2, marzo: 3, abril: 4, mayo: 5, junio: 6,
+  julio: 7, agosto: 8, septiembre: 9, octubre: 10, noviembre: 11, diciembre: 12,
+};
 
-function getVal(row: Record<string, unknown>, aliases: string[]): unknown {
-  const normalized = aliases.map(norm);
-  for (const [k, v] of Object.entries(row)) {
-    if (normalized.includes(norm(k))) return v;
-  }
-  return undefined;
+function parseMes(raw: string): number {
+  return MES_MAP[raw.trim().toLowerCase()] ?? 0;
 }
 
 function toNum(v: unknown): number {
@@ -33,8 +25,116 @@ function toNum(v: unknown): number {
   return isNaN(n) ? 0 : n;
 }
 
+function toInt(v: unknown): number {
+  return Math.round(toNum(v));
+}
+
 function toStr(v: unknown): string {
   return v == null ? "" : String(v).trim();
+}
+
+function getVal(row: Record<string, unknown>, key: string): unknown {
+  const normKey = key.toLowerCase().replace(/\s+/g, "");
+  for (const [k, v] of Object.entries(row)) {
+    if (k.trim().toLowerCase().replace(/\s+/g, "") === normKey) return v;
+  }
+  return undefined;
+}
+
+function parseBudgetForecast(
+  rows: Record<string, unknown>[],
+  tipo: "budget" | "forecast"
+) {
+  const agg = new Map<string, { direccion: string; area: string; mes: number; costo: number; hc: number }>();
+
+  for (const row of rows) {
+    const mesStr = toStr(getVal(row, "MES"));
+    const mes = parseMes(mesStr);
+    if (mes === 0) continue;
+
+    const direccion = toStr(getVal(row, "DIRECCION"));
+    const area = toStr(getVal(row, "AREA FORECAST") ?? getVal(row, "AREAFORECAST"));
+    if (!direccion || !area) continue;
+
+    const costoTotal = toNum(
+      getVal(row, "COSTO TOTAL") ?? getVal(row, "COSTOTOTAL")
+    );
+
+    const key = `${direccion}|${area}|${mes}`;
+    const existing = agg.get(key);
+    if (existing) {
+      existing.costo += costoTotal;
+      existing.hc += 1;
+    } else {
+      agg.set(key, { direccion, area, mes, costo: costoTotal, hc: 1 });
+    }
+  }
+
+  return { tipo, data: Array.from(agg.values()) };
+}
+
+function parseHistorico(rows: Record<string, unknown>[]) {
+  return rows
+    .map((r) => {
+      const mesStr = toStr(getVal(r, "MES"));
+      const mes = parseMes(mesStr);
+      if (mes === 0) return null;
+      return {
+        anio: toInt(getVal(r, "AÑO") ?? getVal(r, "ANO")),
+        mes,
+        poblacion: toStr(getVal(r, "POBLACION")),
+        hcPresupuesto: toInt(getVal(r, "HC P") ?? getVal(r, "HCP")),
+        hcReal: toInt(getVal(r, "HC R") ?? getVal(r, "HCR")),
+        forecast: toNum(getVal(r, "FORECAST")),
+        real: toNum(getVal(r, "REAL")),
+        budget: toNum(getVal(r, "BUDGET")),
+        altas: toInt(getVal(r, "ALTAS")),
+        bajas: toInt(getVal(r, "BAJAS")),
+      };
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null && r.anio > 0);
+}
+
+function parseComisiones(rows: Record<string, unknown>[], anio: number) {
+  const byLabel = new Map<string, Record<string, unknown>>();
+  for (const row of rows) {
+    const label = toStr(row["__EMPTY"] ?? row[""] ?? Object.values(row)[0])
+      .toUpperCase()
+      .replace(/\s+/g, " ")
+      .trim();
+    if (label) byLabel.set(label, row);
+  }
+
+  const hcProy = byLabel.get("HC PROYECTADO");
+  const presup = byLabel.get("PRESUPUESTADO");
+  const realHc = byLabel.get("REAL HC");
+  const realCosto = byLabel.get("REAL COSTO ($)");
+
+  const result: {
+    anio: number; mes: number; hcProyectado: number;
+    presupuestado: number; realHc: number; realCosto: number;
+  }[] = [];
+
+  for (const [mesName, mesNum] of Object.entries(MES_MAP)) {
+    const findCol = (row: Record<string, unknown> | undefined) => {
+      if (!row) return 0;
+      for (const [k, v] of Object.entries(row)) {
+        if (k.trim().toLowerCase().startsWith(mesName.slice(0, 3))) return toNum(v);
+      }
+      return 0;
+    };
+
+    result.push({
+      anio,
+      mes: mesNum,
+      hcProyectado: toInt(findCol(hcProy)),
+      presupuestado: findCol(presup),
+      realHc: toInt(findCol(realHc)),
+      realCosto: findCol(realCosto),
+    });
+  }
+
+  return result.filter((r) => r.hcProyectado > 0 || r.presupuestado > 0 || r.realHc > 0 || r.realCosto > 0);
 }
 
 export async function uploadData(
@@ -46,29 +146,17 @@ export async function uploadData(
     return { success: false, message: "No tienes permisos para cargar datos." };
   }
 
-  const module = toStr(formData.get("module")) as DataModule;
   const anio = parseInt(toStr(formData.get("anio")));
-  const mes = parseInt(toStr(formData.get("mes")));
   const file = formData.get("file") as File | null;
 
   if (!file || file.size === 0) {
     return { success: false, message: "Selecciona un archivo Excel (.xlsx)." };
   }
-  if (file.size > 10 * 1024 * 1024) {
-    return { success: false, message: "El archivo no debe superar 10 MB." };
+  if (file.size > 20 * 1024 * 1024) {
+    return { success: false, message: "El archivo no debe superar 20 MB." };
   }
-  const ALLOWED_MIME = [
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "application/vnd.ms-excel",
-  ];
-  if (!ALLOWED_MIME.includes(file.type)) {
-    return { success: false, message: "Solo se permiten archivos Excel (.xlsx, .xls)." };
-  }
-  if (!["FORECAST", "HC", "COMERCIAL"].includes(module)) {
-    return { success: false, message: "Módulo inválido." };
-  }
-  if (isNaN(anio) || anio < 2000 || anio > 2100 || isNaN(mes) || mes < 1 || mes > 12) {
-    return { success: false, message: "Año o mes inválido." };
+  if (isNaN(anio) || anio < 2000 || anio > 2100) {
+    return { success: false, message: "Año inválido." };
   }
 
   let buffer: ArrayBuffer;
@@ -78,86 +166,121 @@ export async function uploadData(
     return { success: false, message: "No se pudo leer el archivo." };
   }
 
-  let rows: Record<string, unknown>[];
+  let wb: XLSX.WorkBook;
   try {
-    const wb = XLSX.read(buffer, { type: "array" });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    rows = XLSX.utils.sheet_to_json(ws) as Record<string, unknown>[];
+    wb = XLSX.read(buffer, { type: "array" });
   } catch {
     return { success: false, message: "Error al parsear el archivo Excel." };
   }
 
-  if (rows.length === 0) {
-    return { success: false, message: "El archivo no contiene datos." };
-  }
-
   const clientId = session.user.clientId;
   const userId = session.user.id;
+  let sheetsProcessed = 0;
+  const summary: string[] = [];
 
   try {
     await prisma.$transaction(async (tx) => {
-      if (module === "FORECAST") {
-        await tx.forecastGasto.deleteMany({ where: { clientId, anio, mes } });
-        await tx.forecastGasto.createMany({
-          data: rows.map((r) => ({
-            clientId,
-            anio,
-            mes,
-            direccion: toStr(getVal(r, ["Dirección", "Direccion", "direccion", "DIRECCION"])),
-            area: toStr(getVal(r, ["Área", "Area", "area", "AREA"])),
-            real: toNum(getVal(r, ["Real", "real", "REAL"])),
-            presupuesto: toNum(getVal(r, ["Presupuesto", "presupuesto", "PRESUPUESTO"])),
-          })),
-        });
-      } else if (module === "HC") {
-        const r = rows[0];
-        await tx.hcColaboradores.upsert({
-          where: { clientId_anio_mes: { clientId, anio, mes } },
-          update: {
-            total: toNum(getVal(r, ["Total", "total", "TOTAL"])),
-            altas: toNum(getVal(r, ["Altas", "altas", "ALTAS"])),
-            bajas: toNum(getVal(r, ["Bajas", "bajas", "BAJAS"])),
-            diasLaborados: toNum(getVal(r, ["Días Laborados", "DiasLaborados", "diaslaborados", "Dias Laborados"])),
-            generoM: toNum(getVal(r, ["Masculino", "masculino", "GeneroM", "generom", "M"])),
-            generoF: toNum(getVal(r, ["Femenino", "femenino", "GeneroF", "generof", "F"])),
-          },
-          create: {
-            clientId,
-            anio,
-            mes,
-            total: toNum(getVal(r, ["Total", "total", "TOTAL"])),
-            altas: toNum(getVal(r, ["Altas", "altas", "ALTAS"])),
-            bajas: toNum(getVal(r, ["Bajas", "bajas", "BAJAS"])),
-            diasLaborados: toNum(getVal(r, ["Días Laborados", "DiasLaborados", "diaslaborados", "Dias Laborados"])),
-            generoM: toNum(getVal(r, ["Masculino", "masculino", "GeneroM", "generom", "M"])),
-            generoF: toNum(getVal(r, ["Femenino", "femenino", "GeneroF", "generof", "F"])),
-          },
-        });
-      } else if (module === "COMERCIAL") {
-        await tx.comercialComision.deleteMany({ where: { clientId, anio, mes } });
-        await tx.comercialComision.createMany({
-          data: rows.map((r) => ({
-            clientId,
-            anio,
-            mes,
-            cadena: toStr(getVal(r, ["Cadena", "cadena", "CADENA"])),
-            kam: toStr(getVal(r, ["KAM", "kam", "Kam"])),
-            tienda: toStr(getVal(r, ["Tienda", "tienda", "TIENDA"])),
-            real: toNum(getVal(r, ["Real", "real", "REAL"])),
-            presupuesto: toNum(getVal(r, ["Presupuesto", "presupuesto", "PRESUPUESTO"])),
-          })),
-        });
+      // Budget sheet
+      const budgetSheet = wb.SheetNames.find((n) => n.toLowerCase().includes("budget"));
+      const forecastSheet = wb.SheetNames.find((n) => n.toLowerCase().includes("forecast"));
+
+      if (budgetSheet || forecastSheet) {
+        await tx.forecastGasto.deleteMany({ where: { clientId, anio } });
+
+        const mergedMap = new Map<string, {
+          direccion: string; area: string; mes: number;
+          budget: number; forecast: number; hcBudget: number; hcForecast: number;
+        }>();
+
+        if (budgetSheet) {
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[budgetSheet]) as Record<string, unknown>[];
+          const parsed = parseBudgetForecast(rows, "budget");
+          for (const item of parsed.data) {
+            const key = `${item.direccion}|${item.area}|${item.mes}`;
+            const existing = mergedMap.get(key) ?? {
+              direccion: item.direccion, area: item.area, mes: item.mes,
+              budget: 0, forecast: 0, hcBudget: 0, hcForecast: 0,
+            };
+            existing.budget = item.costo;
+            existing.hcBudget = item.hc;
+            mergedMap.set(key, existing);
+          }
+          sheetsProcessed++;
+          summary.push(`Budget: ${rows.length} filas`);
+        }
+
+        if (forecastSheet) {
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[forecastSheet]) as Record<string, unknown>[];
+          const parsed = parseBudgetForecast(rows, "forecast");
+          for (const item of parsed.data) {
+            const key = `${item.direccion}|${item.area}|${item.mes}`;
+            const existing = mergedMap.get(key) ?? {
+              direccion: item.direccion, area: item.area, mes: item.mes,
+              budget: 0, forecast: 0, hcBudget: 0, hcForecast: 0,
+            };
+            existing.forecast = item.costo;
+            existing.hcForecast = item.hc;
+            mergedMap.set(key, existing);
+          }
+          sheetsProcessed++;
+          summary.push(`Forecast: ${rows.length} filas`);
+        }
+
+        const forecastData = Array.from(mergedMap.values());
+        if (forecastData.length > 0) {
+          await tx.forecastGasto.createMany({
+            data: forecastData.map((d) => ({
+              clientId, anio, mes: d.mes,
+              direccion: d.direccion, area: d.area,
+              budget: d.budget, forecast: d.forecast,
+              hcBudget: d.hcBudget, hcForecast: d.hcForecast,
+            })),
+          });
+        }
+      }
+
+      // Historico sheet
+      const historicoSheet = wb.SheetNames.find((n) => n.toLowerCase().includes("histori"));
+      if (historicoSheet) {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[historicoSheet]) as Record<string, unknown>[];
+        const parsed = parseHistorico(rows);
+
+        const years = [...new Set(parsed.map((r) => r.anio))];
+        for (const y of years) {
+          await tx.historicoData.deleteMany({ where: { clientId, anio: y } });
+        }
+
+        if (parsed.length > 0) {
+          await tx.historicoData.createMany({
+            data: parsed.map((r) => ({ clientId, ...r })),
+          });
+        }
+        sheetsProcessed++;
+        summary.push(`Histórico: ${parsed.length} filas`);
+      }
+
+      // Comisiones sheet
+      const comisionesSheet = wb.SheetNames.find((n) => n.toLowerCase().includes("comisi"));
+      if (comisionesSheet) {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[comisionesSheet]) as Record<string, unknown>[];
+        const parsed = parseComisiones(rows, anio);
+
+        await tx.comisionMensual.deleteMany({ where: { clientId, anio } });
+
+        if (parsed.length > 0) {
+          await tx.comisionMensual.createMany({
+            data: parsed.map((r) => ({ clientId, ...r })),
+          });
+        }
+        sheetsProcessed++;
+        summary.push(`Comisiones: ${parsed.length} meses`);
       }
 
       await tx.dataUpload.create({
         data: {
-          clientId,
-          userId,
-          module,
-          anio,
-          mes,
+          clientId, userId, anio,
           fileName: file.name,
-          rows: rows.length,
+          sheets: sheetsProcessed,
         },
       });
     });
@@ -166,9 +289,12 @@ export async function uploadData(
     return { success: false, message: "Error al guardar los datos. Revisa el formato del archivo." };
   }
 
+  if (sheetsProcessed === 0) {
+    return { success: false, message: "No se encontraron hojas válidas (Budget, Forecast, Historico, Comisiones)." };
+  }
+
   return {
     success: true,
-    message: `${rows.length} registro${rows.length !== 1 ? "s" : ""} cargado${rows.length !== 1 ? "s" : ""} correctamente.`,
-    rows: rows.length,
+    message: `${sheetsProcessed} hoja${sheetsProcessed !== 1 ? "s" : ""} procesada${sheetsProcessed !== 1 ? "s" : ""}. ${summary.join(" · ")}`,
   };
 }

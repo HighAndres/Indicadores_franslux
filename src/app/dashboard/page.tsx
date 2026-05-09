@@ -17,51 +17,35 @@ export default async function DashboardPage() {
 
   const clientId = session.user.clientId;
 
-  const latestForecastPeriod = await prisma.forecastGasto.findFirst({
+  const latestHistorico = await prisma.historicoData.findFirst({
     where: { clientId },
     orderBy: [{ anio: "desc" }, { mes: "desc" }],
     select: { anio: true, mes: true },
   });
 
-  const latestHcPeriod = await prisma.hcColaboradores.findFirst({
+  const latestComision = await prisma.comisionMensual.findFirst({
     where: { clientId },
     orderBy: [{ anio: "desc" }, { mes: "desc" }],
     select: { anio: true, mes: true },
   });
 
-  const latestComercialPeriod = await prisma.comercialComision.findFirst({
-    where: { clientId },
-    orderBy: [{ anio: "desc" }, { mes: "desc" }],
-    select: { anio: true, mes: true },
-  });
-
-  const [forecastAgg, hcData, comercialAgg] = await Promise.all([
-    latestForecastPeriod
-      ? prisma.forecastGasto.aggregate({
-          where: { clientId, anio: latestForecastPeriod.anio, mes: latestForecastPeriod.mes },
+  const [historicoAgg, hcAgg, comisionData] = await Promise.all([
+    latestHistorico
+      ? prisma.historicoData.aggregate({
+          where: { clientId, anio: latestHistorico.anio, mes: latestHistorico.mes },
           _sum: { real: true },
         })
       : null,
-    latestHcPeriod
-      ? prisma.hcColaboradores.findUnique({
-          where: {
-            clientId_anio_mes: {
-              clientId,
-              anio: latestHcPeriod.anio,
-              mes: latestHcPeriod.mes,
-            },
-          },
-          select: { total: true },
+    latestHistorico
+      ? prisma.historicoData.aggregate({
+          where: { clientId, anio: latestHistorico.anio, mes: latestHistorico.mes },
+          _sum: { hcReal: true },
         })
       : null,
-    latestComercialPeriod
-      ? prisma.comercialComision.aggregate({
-          where: {
-            clientId,
-            anio: latestComercialPeriod.anio,
-            mes: latestComercialPeriod.mes,
-          },
-          _sum: { real: true },
+    latestComision
+      ? prisma.comisionMensual.findUnique({
+          where: { clientId_anio_mes: { clientId, anio: latestComision.anio, mes: latestComision.mes } },
+          select: { realCosto: true },
         })
       : null,
   ]);
@@ -69,21 +53,21 @@ export default async function DashboardPage() {
   const cards = [
     {
       title: "Gasto real",
-      value: forecastAgg?._sum.real ? fmt(forecastAgg._sum.real) : "—",
-      subtitle: "Forecast del mes actual",
+      value: historicoAgg?._sum.real ? fmt(historicoAgg._sum.real) : "—",
+      subtitle: "Histórico del último mes",
       href: "/dashboard/forecast",
       icon: LineChart,
     },
     {
       title: "Total colaboradores",
-      value: hcData?.total ? hcData.total.toLocaleString("es-MX") : "—",
+      value: hcAgg?._sum.hcReal ? hcAgg._sum.hcReal.toLocaleString("es-MX") : "—",
       subtitle: "Headcount actualizado",
       href: "/dashboard/hc",
       icon: UsersRound,
     },
     {
-      title: "Comisiones reales",
-      value: comercialAgg?._sum.real ? fmt(comercialAgg._sum.real) : "—",
+      title: "Costo real comisiones",
+      value: comisionData?.realCosto ? fmt(comisionData.realCosto) : "—",
       subtitle: "Indicador comercial mensual",
       href: "/dashboard/comercial",
       icon: BarChart3,
@@ -111,7 +95,7 @@ export default async function DashboardPage() {
             <Link
               key={card.title}
               href={card.href}
-              className="group rounded-3xl border border-[#222222] bg-[#111111] p-6  transition hover:-translate-y-1 hover:shadow-md"
+              className="group rounded-3xl border border-[#222222] bg-[#111111] p-6 transition hover:-translate-y-1 hover:shadow-md"
             >
               <div className="mb-6 flex items-center justify-between">
                 <div className="rounded-2xl bg-[#238D80]/10 p-3 text-[#205C40]">
