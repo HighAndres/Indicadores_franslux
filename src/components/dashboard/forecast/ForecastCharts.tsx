@@ -14,8 +14,10 @@ import {
 export interface ForecastRow {
   area: string;
   direccion: string;
-  real: number;
-  presupuesto: number;
+  budget: number;
+  forecast: number;
+  hcBudget: number;
+  hcForecast: number;
 }
 
 const CHART_COLORS = ["#238D80", "#00859B", "#003057", "#205C40"];
@@ -36,13 +38,13 @@ const tooltipStyle = {
 
 export function ForecastCharts({ data }: { data: ForecastRow[] }) {
   const byDireccion = Object.values(
-    data.reduce<Record<string, { direccion: string; real: number; presupuesto: number }>>(
+    data.reduce<Record<string, { direccion: string; budget: number; forecast: number }>>(
       (acc, row) => {
         if (!acc[row.direccion]) {
-          acc[row.direccion] = { direccion: row.direccion, real: 0, presupuesto: 0 };
+          acc[row.direccion] = { direccion: row.direccion, budget: 0, forecast: 0 };
         }
-        acc[row.direccion].real += row.real;
-        acc[row.direccion].presupuesto += row.presupuesto;
+        acc[row.direccion].budget += row.budget;
+        acc[row.direccion].forecast += row.forecast;
         return acc;
       },
       {}
@@ -60,7 +62,7 @@ export function ForecastCharts({ data }: { data: ForecastRow[] }) {
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
           <h2 className="mb-6 text-base font-semibold text-[#F1BE48]">
-            Real vs Presupuesto por Área
+            Budget vs Forecast por Área
           </h2>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={data} {...chartProps}>
@@ -69,15 +71,15 @@ export function ForecastCharts({ data }: { data: ForecastRow[] }) {
               <YAxis tick={axisProps} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(v: unknown) => [fmt(v as number)]} contentStyle={tooltipStyle} />
               <Legend />
-              <Bar dataKey="real" name="Real" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="presupuesto" name="Presupuesto" fill={CHART_COLORS[1]} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="budget" name="Budget" fill={CHART_COLORS[2]} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="forecast" name="Forecast" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
           <h2 className="mb-6 text-base font-semibold text-[#F1BE48]">
-            Real vs Presupuesto por Dirección
+            Budget vs Forecast por Dirección
           </h2>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={byDireccion} {...chartProps}>
@@ -86,8 +88,8 @@ export function ForecastCharts({ data }: { data: ForecastRow[] }) {
               <YAxis tick={axisProps} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(v: unknown) => [fmt(v as number)]} contentStyle={tooltipStyle} />
               <Legend />
-              <Bar dataKey="real" name="Real" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="presupuesto" name="Presupuesto" fill={CHART_COLORS[1]} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="budget" name="Budget" fill={CHART_COLORS[2]} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="forecast" name="Forecast" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -100,20 +102,22 @@ export function ForecastCharts({ data }: { data: ForecastRow[] }) {
             <tr className="border-b border-[#222222]">
               <th className="pb-3 text-left font-medium text-[#9A9A9A]">Dirección</th>
               <th className="pb-3 text-left font-medium text-[#9A9A9A]">Área</th>
-              <th className="pb-3 text-right font-medium text-[#9A9A9A]">Real</th>
-              <th className="pb-3 text-right font-medium text-[#9A9A9A]">Presupuesto</th>
-              <th className="pb-3 text-right font-medium text-[#9A9A9A]">% Ejec.</th>
+              <th className="pb-3 text-right font-medium text-[#9A9A9A]">Budget</th>
+              <th className="pb-3 text-right font-medium text-[#9A9A9A]">Forecast</th>
+              <th className="pb-3 text-right font-medium text-[#9A9A9A]">% Var.</th>
+              <th className="pb-3 text-right font-medium text-[#9A9A9A]">HC Budget</th>
+              <th className="pb-3 text-right font-medium text-[#9A9A9A]">HC Forecast</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#1A1A1A]">
             {data.map((row, i) => {
-              const pct = row.presupuesto > 0 ? (row.real / row.presupuesto) * 100 : 0;
+              const pct = row.budget > 0 ? (row.forecast / row.budget) * 100 : 0;
               return (
                 <tr key={i} className="hover:bg-white/5">
                   <td className="py-3 text-[#9A9A9A]">{row.direccion}</td>
                   <td className="py-3 font-medium text-[#F1BE48]">{row.area}</td>
-                  <td className="py-3 text-right text-[#F1BE48]">{fmt(row.real)}</td>
-                  <td className="py-3 text-right text-[#9A9A9A]">{fmt(row.presupuesto)}</td>
+                  <td className="py-3 text-right text-[#9A9A9A]">{fmt(row.budget)}</td>
+                  <td className="py-3 text-right text-[#F1BE48]">{fmt(row.forecast)}</td>
                   <td
                     className={`py-3 text-right font-semibold ${
                       pct > 100 ? "text-amber-400" : "text-emerald-400"
@@ -121,6 +125,8 @@ export function ForecastCharts({ data }: { data: ForecastRow[] }) {
                   >
                     {pct.toFixed(1)}%
                   </td>
+                  <td className="py-3 text-right text-[#9A9A9A]">{row.hcBudget.toLocaleString("es-MX")}</td>
+                  <td className="py-3 text-right text-[#F1BE48]">{row.hcForecast.toLocaleString("es-MX")}</td>
                 </tr>
               );
             })}

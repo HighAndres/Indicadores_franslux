@@ -28,13 +28,12 @@ export default async function ForecastPage({
 
   const data = await prisma.forecastGasto.findMany({
     where: { clientId: session.user.clientId, anio, mes },
-    orderBy: { real: "desc" },
+    orderBy: { forecast: "desc" },
   });
 
-  const totalReal = data.reduce((s, r) => s + r.real, 0);
-  const totalPresupuesto = data.reduce((s, r) => s + r.presupuesto, 0);
-  const pctEjecucion =
-    totalPresupuesto > 0 ? (totalReal / totalPresupuesto) * 100 : 0;
+  const totalBudget = data.reduce((s, r) => s + r.budget, 0);
+  const totalForecast = data.reduce((s, r) => s + r.forecast, 0);
+  const pctVar = totalBudget > 0 ? (totalForecast / totalBudget) * 100 : 0;
 
   return (
     <div className="space-y-8">
@@ -44,10 +43,10 @@ export default async function ForecastPage({
             Forecast
           </p>
           <h1 className="mt-2 text-3xl font-semibold text-[#F1BE48]">
-            Indicadores de gasto mensual
+            Budget vs Forecast mensual
           </h1>
           <p className="mt-2 text-[#9A9A9A]">
-            Real vs presupuesto por dirección y área.
+            Comparativa por dirección y área.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -59,12 +58,12 @@ export default async function ForecastPage({
       </div>
 
       <div className="grid gap-5 sm:grid-cols-3">
-        <KpiCard label="Gasto real" value={fmt(totalReal)} subtitle={`${data.length} áreas`} />
-        <KpiCard label="Presupuesto" value={fmt(totalPresupuesto)} />
+        <KpiCard label="Budget" value={fmt(totalBudget)} subtitle={`${data.length} áreas`} />
+        <KpiCard label="Forecast" value={fmt(totalForecast)} />
         <KpiCard
-          label="% Ejecución"
-          value={`${pctEjecucion.toFixed(1)}%`}
-          subtitle={pctEjecucion > 100 ? "Sobre presupuesto" : "Dentro del presupuesto"}
+          label="% Variación"
+          value={`${pctVar.toFixed(1)}%`}
+          subtitle={pctVar > 100 ? "Sobre presupuesto" : "Dentro del presupuesto"}
           highlight
         />
       </div>
@@ -78,8 +77,10 @@ export default async function ForecastPage({
           data={data.map((r) => ({
             area: r.area,
             direccion: r.direccion,
-            real: r.real,
-            presupuesto: r.presupuesto,
+            budget: r.budget,
+            forecast: r.forecast,
+            hcBudget: r.hcBudget,
+            hcForecast: r.hcForecast,
           }))}
         />
       )}

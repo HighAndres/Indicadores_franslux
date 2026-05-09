@@ -12,12 +12,6 @@ enum Role {
   CLIENT_USER
 }
 
-enum DataModule {
-  FORECAST
-  HC
-  COMERCIAL
-}
-
 model Client {
   id       String  @id @default(cuid())
   name     String
@@ -26,11 +20,11 @@ model Client {
   color    String?
   isActive Boolean @default(true)
 
-  users     User[]
-  forecast  ForecastGasto[]
-  hc        HcColaboradores[]
-  comercial ComercialComision[]
-  uploads   DataUpload[]
+  users      User[]
+  forecast   ForecastGasto[]
+  historico  HistoricoData[]
+  comisiones ComisionMensual[]
+  uploads    DataUpload[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -54,15 +48,18 @@ model User {
   @@index([clientId])
 }
 
+// Aggregated from Budget/Forecast Excel sheets by dirección + área + mes
 model ForecastGasto {
-  id          String @id @default(cuid())
-  clientId    String
-  anio        Int
-  mes         Int
-  direccion   String
-  area        String
-  real        Float
-  presupuesto Float
+  id         String @id @default(cuid())
+  clientId   String
+  anio       Int
+  mes        Int
+  direccion  String
+  area       String
+  budget     Float  @default(0)
+  forecast   Float  @default(0)
+  hcBudget   Int    @default(0)
+  hcForecast Int    @default(0)
 
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
@@ -74,17 +71,40 @@ model ForecastGasto {
   @@index([clientId, area])
 }
 
-model HcColaboradores {
+// From Historico Excel sheet — one row per población per month
+model HistoricoData {
   id            String @id @default(cuid())
   clientId      String
   anio          Int
   mes           Int
-  total         Int
-  altas         Int
-  bajas         Int
-  diasLaborados Int
-  generoM       Int
-  generoF       Int
+  poblacion     String
+  hcPresupuesto Int    @default(0)
+  hcReal        Int    @default(0)
+  forecast      Float  @default(0)
+  real          Float  @default(0)
+  budget        Float  @default(0)
+  altas         Int    @default(0)
+  bajas         Int    @default(0)
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clientId, anio, mes, poblacion])
+  @@index([clientId, anio])
+}
+
+// From Comisiones Excel sheet — transposed to one row per month
+model ComisionMensual {
+  id            String @id @default(cuid())
+  clientId      String
+  anio          Int
+  mes           Int
+  hcProyectado  Int    @default(0)
+  presupuestado Float  @default(0)
+  realHc        Int    @default(0)
+  realCosto     Float  @default(0)
 
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
@@ -95,42 +115,18 @@ model HcColaboradores {
   @@index([clientId])
 }
 
-model ComercialComision {
-  id          String @id @default(cuid())
-  clientId    String
-  anio        Int
-  mes         Int
-  cadena      String
-  kam         String
-  tienda      String
-  real        Float
-  presupuesto Float
-
-  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([clientId, anio, mes])
-  @@index([clientId, cadena])
-  @@index([clientId, kam])
-  @@index([clientId, tienda])
-}
-
 model DataUpload {
-  id       String     @id @default(cuid())
+  id       String @id @default(cuid())
   clientId String
   userId   String
-  module   DataModule
   anio     Int
-  mes      Int
   fileName String
-  rows     Int
+  sheets   Int    @default(0)
 
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
-  @@index([clientId, module, anio, mes])
+  @@index([clientId, anio])
 }

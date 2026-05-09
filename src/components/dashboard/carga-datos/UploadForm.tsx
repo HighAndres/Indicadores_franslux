@@ -5,17 +5,6 @@ import { Upload, CheckCircle, XCircle, FileSpreadsheet } from "lucide-react";
 import { uploadData } from "@/app/dashboard/carga-datos/actions";
 import type { UploadState } from "@/app/dashboard/carga-datos/actions";
 
-const MODULOS = [
-  { value: "FORECAST", label: "Forecast — Gasto mensual" },
-  { value: "HC", label: "Headcount — Colaboradores" },
-  { value: "COMERCIAL", label: "Comercial — Comisiones" },
-];
-
-const MESES = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
-];
-
 const ANIOS = [2024, 2025, 2026];
 
 const now = new Date();
@@ -40,53 +29,20 @@ export function UploadForm() {
 
   return (
     <form action={action} className="space-y-5">
-      <div className="grid gap-5 sm:grid-cols-3">
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-[#9A9A9A]">
-            Módulo
-          </label>
-          <select
-            name="module"
-            required
-            className="w-full rounded-xl border border-[#222222] bg-[#1A1A1A] px-4 py-2.5 text-sm text-[#F1BE48] outline-none focus:border-[#238D80] focus:bg-[#111111] focus:ring-2 focus:ring-[#238D80]/20"
-          >
-            {MODULOS.map((m) => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-[#9A9A9A]">
-            Año
-          </label>
-          <select
-            name="anio"
-            defaultValue={now.getFullYear()}
-            required
-            className="w-full rounded-xl border border-[#222222] bg-[#1A1A1A] px-4 py-2.5 text-sm text-[#F1BE48] outline-none focus:border-[#238D80] focus:bg-[#111111] focus:ring-2 focus:ring-[#238D80]/20"
-          >
-            {ANIOS.map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-[#9A9A9A]">
-            Mes
-          </label>
-          <select
-            name="mes"
-            defaultValue={now.getMonth() + 1}
-            required
-            className="w-full rounded-xl border border-[#222222] bg-[#1A1A1A] px-4 py-2.5 text-sm text-[#F1BE48] outline-none focus:border-[#238D80] focus:bg-[#111111] focus:ring-2 focus:ring-[#238D80]/20"
-          >
-            {MESES.map((m, i) => (
-              <option key={i + 1} value={i + 1}>{m}</option>
-            ))}
-          </select>
-        </div>
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-[#9A9A9A]">
+          Año
+        </label>
+        <select
+          name="anio"
+          defaultValue={now.getFullYear()}
+          required
+          className="w-full max-w-[200px] rounded-xl border border-[#222222] bg-[#1A1A1A] px-4 py-2.5 text-sm text-[#F1BE48] outline-none focus:border-[#238D80] focus:bg-[#111111] focus:ring-2 focus:ring-[#238D80]/20"
+        >
+          {ANIOS.map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
       </div>
 
       <div>
@@ -125,7 +81,7 @@ export function UploadForm() {
                   <span className="text-[#238D80]">haz clic para buscar</span>
                 </p>
                 <p className="mt-1 text-xs text-[#555555]">
-                  Solo archivos .xlsx o .xls
+                  Excel con hojas: Budget, Forecast, Historico, Comisiones
                 </p>
               </div>
             </>
