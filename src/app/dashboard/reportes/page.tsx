@@ -172,20 +172,20 @@ export default async function ReportesPage({
                 )}
               </div>
 
-              <a
-                href={m.href}
-                className={[
-                  "mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition",
-                  empty
-                    ? "cursor-not-allowed border border-[#222222] text-neutral-300"
-                    : "border border-[#238D80]/30 bg-[#238D80]/5 text-[#205C40] hover:bg-[#238D80]/10",
-                ].join(" ")}
-                aria-disabled={empty}
-                onClick={empty ? (e) => e.preventDefault() : undefined}
-              >
-                <FileDown className="h-4 w-4" />
-                Descargar Excel
-              </a>
+              {empty ? (
+                <span className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#222222] px-4 py-2.5 text-sm font-medium text-neutral-300 cursor-not-allowed">
+                  <FileDown className="h-4 w-4" />
+                  Descargar Excel
+                </span>
+              ) : (
+                <a
+                  href={m.href}
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#238D80]/30 bg-[#238D80]/5 px-4 py-2.5 text-sm font-medium text-[#205C40] transition hover:bg-[#238D80]/10"
+                >
+                  <FileDown className="h-4 w-4" />
+                  Descargar Excel
+                </a>
+              )}
             </div>
           );
         })}

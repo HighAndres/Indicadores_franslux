@@ -74,25 +74,47 @@ function parseBudgetForecast(
 }
 
 function parseHistorico(rows: Record<string, unknown>[]) {
-  return rows
-    .map((r) => {
-      const mesStr = toStr(getVal(r, "MES"));
-      const mes = parseMes(mesStr);
-      if (mes === 0) return null;
-      return {
-        anio: toInt(getVal(r, "AÑO") ?? getVal(r, "ANO")),
-        mes,
-        poblacion: toStr(getVal(r, "POBLACION")),
-        hcPresupuesto: toInt(getVal(r, "HC P") ?? getVal(r, "HCP")),
-        hcReal: toInt(getVal(r, "HC R") ?? getVal(r, "HCR")),
-        forecast: toNum(getVal(r, "FORECAST")),
-        real: toNum(getVal(r, "REAL")),
-        budget: toNum(getVal(r, "BUDGET")),
-        altas: toInt(getVal(r, "ALTAS")),
-        bajas: toInt(getVal(r, "BAJAS")),
-      };
-    })
-    .filter((r): r is NonNullable<typeof r> => r !== null && r.anio > 0);
+  const agg = new Map<string, {
+    anio: number; mes: number; poblacion: string;
+    hcPresupuesto: number; hcReal: number;
+    forecast: number; real: number; budget: number;
+    altas: number; bajas: number;
+  }>();
+
+  for (const r of rows) {
+    const mesStr = toStr(getVal(r, "MES"));
+    const mes = parseMes(mesStr);
+    if (mes === 0) continue;
+
+    const anio = toInt(getVal(r, "AÑO") ?? getVal(r, "ANO"));
+    if (anio <= 0) continue;
+
+    const poblacion = toStr(getVal(r, "POBLACION"));
+    const key = `${anio}|${mes}|${poblacion}`;
+
+    const existing = agg.get(key);
+    const hcP = toInt(getVal(r, "HC P") ?? getVal(r, "HCP"));
+    const hcR = toInt(getVal(r, "HC R") ?? getVal(r, "HCR"));
+    const forecast = toNum(getVal(r, "FORECAST"));
+    const real = toNum(getVal(r, "REAL"));
+    const budget = toNum(getVal(r, "BUDGET"));
+    const altas = toInt(getVal(r, "ALTAS"));
+    const bajas = toInt(getVal(r, "BAJAS"));
+
+    if (existing) {
+      existing.hcPresupuesto += hcP;
+      existing.hcReal += hcR;
+      existing.forecast += forecast;
+      existing.real += real;
+      existing.budget += budget;
+      existing.altas += altas;
+      existing.bajas += bajas;
+    } else {
+      agg.set(key, { anio, mes, poblacion, hcPresupuesto: hcP, hcReal: hcR, forecast, real, budget, altas, bajas });
+    }
+  }
+
+  return Array.from(agg.values());
 }
 
 function parseComisiones(rows: Record<string, unknown>[], anio: number) {

@@ -89,9 +89,8 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-[#222222] px-6 py-5">
-          <p className="text-xs text-[#9A9A9A]">Desarrollado por</p>
-          <p className="text-sm font-semibold text-[#F1BE48]">Mirmibug</p>
+        <div className="border-t border-[#222222] px-6 py-3">
+          <p className="text-[10px] text-[#3a3a3a]">por Mirmibug</p>
         </div>
       </div>
     </aside>
