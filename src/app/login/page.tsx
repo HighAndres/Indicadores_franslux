@@ -137,9 +137,8 @@ function LoginForm() {
           </div>
         </form>
 
-        <p className="mt-6 text-center text-xs text-[#555555]">
-          Desarrollado por{" "}
-          <span className="font-semibold text-[#9A9A9A]">Mirmibug</span>
+        <p className="mt-6 text-center text-[10px] text-[#3a3a3a]">
+          por Mirmibug
         </p>
       </div>
     </div>
