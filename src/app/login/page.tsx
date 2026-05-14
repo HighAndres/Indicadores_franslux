@@ -136,10 +136,6 @@ function LoginForm() {
             </button>
           </div>
         </form>
-
-        <p className="mt-6 text-center text-[10px] text-[#3a3a3a]">
-          por Mirmibug
-        </p>
       </div>
     </div>
   );
