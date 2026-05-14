@@ -54,7 +54,7 @@ export default async function DashboardPage() {
     {
       title: "Gasto real",
       value: historicoAgg?._sum.real ? fmt(historicoAgg._sum.real) : "—",
-      subtitle: "Histórico del último mes",
+      subtitle: "Dato del último mes",
       href: "/dashboard/forecast",
       icon: LineChart,
     },
@@ -84,7 +84,7 @@ export default async function DashboardPage() {
           Indicadores del mes
         </h1>
         <p className="mt-2 max-w-2xl text-[#9A9A9A]">
-          Vista general de Forecast, Headcount y Comercial para seguimiento directivo.
+          Vista general de Real, Headcount y Comercial para seguimiento directivo.
         </p>
       </div>
 

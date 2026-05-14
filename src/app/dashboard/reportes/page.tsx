@@ -53,8 +53,8 @@ export default async function ReportesPage({
   const modules = [
     {
       key: "forecast",
-      label: "Forecast",
-      desc: "Budget vs Forecast por dirección y área",
+      label: "Real",
+      desc: "Budget vs Real por dirección y área",
       icon: LineChart,
       count: forecastCount,
       countLabel: forecastCount === 1 ? "registro" : "registros",

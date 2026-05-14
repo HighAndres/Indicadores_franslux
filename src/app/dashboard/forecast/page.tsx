@@ -17,33 +17,39 @@ const fmt = (v: number) =>
 export default async function ForecastPage({
   searchParams,
 }: {
-  searchParams: Promise<{ anio?: string; mes?: string }>;
+  searchParams: Promise<{ anio?: string; mes?: string; direccion?: string }>;
 }) {
   const session = await auth();
   if (!session) redirect("/login");
 
-  const { anio: anioStr, mes: mesStr } = await searchParams;
+  const { anio: anioStr, mes: mesStr, direccion } = await searchParams;
   const anio = parseInt(anioStr ?? "2026");
   const mes = parseInt(mesStr ?? "4");
 
-  const data = await prisma.forecastGasto.findMany({
+  const allData = await prisma.forecastGasto.findMany({
     where: { clientId: session.user.clientId, anio, mes },
     orderBy: { forecast: "desc" },
   });
 
+  const direcciones = [...new Set(allData.map((r) => r.direccion))].sort();
+
+  const data = direccion
+    ? allData.filter((r) => r.direccion === direccion)
+    : allData;
+
   const totalBudget = data.reduce((s, r) => s + r.budget, 0);
-  const totalForecast = data.reduce((s, r) => s + r.forecast, 0);
-  const pctVar = totalBudget > 0 ? (totalForecast / totalBudget) * 100 : 0;
+  const totalReal = data.reduce((s, r) => s + r.forecast, 0);
+  const pctVar = totalBudget > 0 ? (totalReal / totalBudget) * 100 : 0;
 
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#238D80]">
-            Forecast
+            Real
           </p>
           <h1 className="mt-2 text-3xl font-semibold text-[#F1BE48]">
-            Budget vs Forecast mensual
+            Budget vs Real mensual
           </h1>
           <p className="mt-2 text-[#9A9A9A]">
             Comparativa por dirección y área.
@@ -59,7 +65,7 @@ export default async function ForecastPage({
 
       <div className="grid gap-5 sm:grid-cols-3">
         <KpiCard label="Budget" value={fmt(totalBudget)} subtitle={`${data.length} áreas`} />
-        <KpiCard label="Forecast" value={fmt(totalForecast)} />
+        <KpiCard label="Real" value={fmt(totalReal)} />
         <KpiCard
           label="% Variación"
           value={`${pctVar.toFixed(1)}%`}
@@ -68,13 +74,13 @@ export default async function ForecastPage({
         />
       </div>
 
-      {data.length === 0 ? (
+      {allData.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-[#222222] bg-[#111111] p-12 text-center">
           <p className="text-[#555555]">Sin datos para el período seleccionado.</p>
         </div>
       ) : (
         <ForecastCharts
-          data={data.map((r) => ({
+          data={allData.map((r) => ({
             area: r.area,
             direccion: r.direccion,
             budget: r.budget,
@@ -82,6 +88,8 @@ export default async function ForecastPage({
             hcBudget: r.hcBudget,
             hcForecast: r.hcForecast,
           }))}
+          direcciones={direcciones}
+          selectedDireccion={direccion ?? ""}
         />
       )}
     </div>
