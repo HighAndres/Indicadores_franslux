@@ -16,10 +16,10 @@ async function getForecastRows(clientId: string, anio: number, mes: number): Pro
     Dirección: r.direccion,
     Área: r.area,
     Budget: r.budget,
-    Forecast: r.forecast,
+    Real: r.forecast,
     "% Var.": r.budget > 0 ? ((r.forecast / r.budget) * 100).toFixed(1) + "%" : "N/A",
     "HC Budget": r.hcBudget,
-    "HC Forecast": r.hcForecast,
+    "HC Real": r.hcForecast,
   }));
 }
 
@@ -33,8 +33,7 @@ async function getHcRows(clientId: string, anio: number, mes: number): Promise<S
     Población: r.poblacion,
     "HC Presupuestado": r.hcPresupuesto,
     "HC Real": r.hcReal,
-    Forecast: r.forecast,
-    Real: r.real,
+    "Costo Real": r.real,
     Budget: r.budget,
     Altas: r.altas,
     Bajas: r.bajas,
@@ -90,8 +89,8 @@ export async function GET(
   const wb = XLSX.utils.book_new();
 
   if (module === "forecast") {
-    addSheet(wb, await getForecastRows(clientId, anio, mes), "Forecast");
-    return toResponse(wb, `forecast_${anio}_${pad(mes)}.xlsx`);
+    addSheet(wb, await getForecastRows(clientId, anio, mes), "Real");
+    return toResponse(wb, `real_${anio}_${pad(mes)}.xlsx`);
   }
 
   if (module === "hc") {
@@ -110,7 +109,7 @@ export async function GET(
       getHcRows(clientId, anio, mes),
       getComercialRows(clientId, anio, mes),
     ]);
-    addSheet(wb, forecast, "Forecast");
+    addSheet(wb, forecast, "Real");
     addSheet(wb, hc, "Headcount");
     addSheet(wb, comercial, "Comisiones");
     return toResponse(wb, `reporte_completo_${anio}_${pad(mes)}.xlsx`);

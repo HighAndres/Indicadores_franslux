@@ -89,14 +89,14 @@ function CostosView({ data }: { data: HistoricoPeriod[] }) {
 
   const chartData = data.map((d) => ({
     period: toChartKey(d.anio, d.mes),
-    Real: d.real, Forecast: d.forecast, Budget: d.budget,
+    Real: d.real, Budget: d.budget,
   }));
 
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
         <h3 className="mb-5 text-sm font-semibold text-[#F1BE48]">
-          Real vs Forecast vs Budget — tendencia mensual
+          Real vs Budget — tendencia mensual
         </h3>
         <ResponsiveContainer width="100%" height={280}>
           <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -112,19 +112,17 @@ function CostosView({ data }: { data: HistoricoPeriod[] }) {
             <Tooltip formatter={(v: unknown) => [fmt(v as number)]} contentStyle={tooltipStyle} />
             <Legend />
             <Area type="monotone" dataKey="Real" stroke={CHART_COLORS[0]} strokeWidth={2} fill="url(#gradReal)" />
-            <Area type="monotone" dataKey="Forecast" stroke={CHART_COLORS[1]} strokeWidth={2} fill="transparent" />
             <Area type="monotone" dataKey="Budget" stroke={CHART_COLORS[2]} strokeWidth={2} fill="transparent" />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
       <PeriodTable
-        headers={["Período", "Real", "Forecast", "Budget"]}
+        headers={["Período", "Real", "Budget"]}
         rows={data.map((d) => ({
           cells: [
             <PeriodLink key="p" anio={d.anio} mes={d.mes} module="forecast" />,
             fmt(d.real),
-            <span key="f" className="text-[#9A9A9A]">{fmt(d.forecast)}</span>,
             <span key="b" className="text-[#9A9A9A]">{fmt(d.budget)}</span>,
           ],
         }))}

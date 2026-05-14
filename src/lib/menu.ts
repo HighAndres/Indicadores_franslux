@@ -17,7 +17,7 @@ export const dashboardMenu = [
     roles: ["CLIENT_ADMIN", "CLIENT_USER"],
   },
   {
-    label: "Forecast",
+    label: "Real",
     href: "/dashboard/forecast",
     icon: LineChart,
     roles: ["CLIENT_ADMIN", "CLIENT_USER"],

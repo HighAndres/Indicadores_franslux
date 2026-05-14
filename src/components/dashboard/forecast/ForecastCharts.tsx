@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useTransition } from "react";
 import {
   BarChart,
   Bar,
@@ -36,15 +38,42 @@ const tooltipStyle = {
   color: "#F1BE48",
 };
 
-export function ForecastCharts({ data }: { data: ForecastRow[] }) {
+interface Props {
+  data: ForecastRow[];
+  direcciones: string[];
+  selectedDireccion: string;
+}
+
+export function ForecastCharts({ data, direcciones, selectedDireccion }: Props) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  function updateDireccion(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set("direccion", value);
+    } else {
+      params.delete("direccion");
+    }
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
+  }
+
+  const filtered = selectedDireccion
+    ? data.filter((r) => r.direccion === selectedDireccion)
+    : data;
+
   const byDireccion = Object.values(
-    data.reduce<Record<string, { direccion: string; budget: number; forecast: number }>>(
+    filtered.reduce<Record<string, { direccion: string; budget: number; real: number }>>(
       (acc, row) => {
         if (!acc[row.direccion]) {
-          acc[row.direccion] = { direccion: row.direccion, budget: 0, forecast: 0 };
+          acc[row.direccion] = { direccion: row.direccion, budget: 0, real: 0 };
         }
         acc[row.direccion].budget += row.budget;
-        acc[row.direccion].forecast += row.forecast;
+        acc[row.direccion].real += row.forecast;
         return acc;
       },
       {}
@@ -59,27 +88,43 @@ export function ForecastCharts({ data }: { data: ForecastRow[] }) {
 
   return (
     <div className="space-y-5">
+      {/* Filtro por dirección */}
+      <div className={`flex items-center gap-3 ${isPending ? "opacity-60" : ""}`}>
+        <label className="text-sm font-medium text-[#9A9A9A]">Dirección:</label>
+        <select
+          value={selectedDireccion}
+          onChange={(e) => updateDireccion(e.target.value)}
+          className="rounded-xl border border-[#222222] bg-[#111111] px-3 py-2 text-sm font-medium text-[#9A9A9A] outline-none focus:border-[#238D80] focus:ring-2 focus:ring-[#238D80]/20"
+        >
+          <option value="">Todas las direcciones</option>
+          {direcciones.map((d) => (
+            <option key={d} value={d}>{d}</option>
+          ))}
+        </select>
+        {isPending && <span className="text-sm text-[#555555]">Cargando…</span>}
+      </div>
+
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
           <h2 className="mb-6 text-base font-semibold text-[#F1BE48]">
-            Budget vs Forecast por Área
+            Budget vs Real por Área
           </h2>
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={data} {...chartProps}>
+            <BarChart data={filtered} {...chartProps}>
               <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
               <XAxis dataKey="area" tick={axisProps} angle={-35} textAnchor="end" />
               <YAxis tick={axisProps} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(v: unknown) => [fmt(v as number)]} contentStyle={tooltipStyle} />
               <Legend />
               <Bar dataKey="budget" name="Budget" fill={CHART_COLORS[2]} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="forecast" name="Forecast" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="forecast" name="Real" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
           <h2 className="mb-6 text-base font-semibold text-[#F1BE48]">
-            Budget vs Forecast por Dirección
+            Budget vs Real por Dirección
           </h2>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={byDireccion} {...chartProps}>
@@ -89,28 +134,30 @@ export function ForecastCharts({ data }: { data: ForecastRow[] }) {
               <Tooltip formatter={(v: unknown) => [fmt(v as number)]} contentStyle={tooltipStyle} />
               <Legend />
               <Bar dataKey="budget" name="Budget" fill={CHART_COLORS[2]} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="forecast" name="Forecast" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="real" name="Real" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       <div className="overflow-x-auto rounded-3xl border border-[#222222] bg-[#111111] p-6">
-        <h2 className="mb-4 text-base font-semibold text-[#F1BE48]">Detalle por área</h2>
+        <h2 className="mb-4 text-base font-semibold text-[#F1BE48]">
+          {selectedDireccion ? `Detalle — ${selectedDireccion}` : "Detalle por área"}
+        </h2>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#222222]">
               <th className="pb-3 text-left font-medium text-[#9A9A9A]">Dirección</th>
               <th className="pb-3 text-left font-medium text-[#9A9A9A]">Área</th>
               <th className="pb-3 text-right font-medium text-[#9A9A9A]">Budget</th>
-              <th className="pb-3 text-right font-medium text-[#9A9A9A]">Forecast</th>
+              <th className="pb-3 text-right font-medium text-[#9A9A9A]">Real</th>
               <th className="pb-3 text-right font-medium text-[#9A9A9A]">% Var.</th>
               <th className="pb-3 text-right font-medium text-[#9A9A9A]">HC Budget</th>
-              <th className="pb-3 text-right font-medium text-[#9A9A9A]">HC Forecast</th>
+              <th className="pb-3 text-right font-medium text-[#9A9A9A]">HC Real</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#1A1A1A]">
-            {data.map((row, i) => {
+            {filtered.map((row, i) => {
               const pct = row.budget > 0 ? (row.forecast / row.budget) * 100 : 0;
               return (
                 <tr key={i} className="hover:bg-white/5">
