@@ -38,6 +38,10 @@ const tooltipStyle = {
   color: "#F1BE48",
 };
 
+function truncate(text: string, max: number) {
+  return text.length > max ? text.slice(0, max) + "…" : text;
+}
+
 interface Props {
   data: ForecastRow[];
   direcciones: string[];
@@ -80,11 +84,20 @@ export function ForecastCharts({ data, direcciones, selectedDireccion }: Props) 
     )
   );
 
-  const chartProps = {
-    margin: { top: 4, right: 4, left: 0, bottom: 60 },
-  };
+  const areaChartData = filtered.map((r) => ({
+    ...r,
+    areaLabel: truncate(r.area, 14),
+  }));
 
-  const axisProps = { fontSize: 11, fill: "#9A9A9A" };
+  const dirChartData = byDireccion.map((r) => ({
+    ...r,
+    dirLabel: truncate(r.direccion, 18),
+  }));
+
+  const axisProps = { fontSize: 10, fill: "#9A9A9A" };
+
+  const areaChartWidth = Math.max(areaChartData.length * 60, 600);
+  const dirChartWidth = Math.max(dirChartData.length * 80, 600);
 
   return (
     <div className="space-y-5">
@@ -104,39 +117,63 @@ export function ForecastCharts({ data, direcciones, selectedDireccion }: Props) 
         {isPending && <span className="text-sm text-[#555555]">Cargando…</span>}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
-          <h2 className="mb-6 text-base font-semibold text-[#F1BE48]">
-            Budget vs Real por Área
-          </h2>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={filtered} {...chartProps}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
-              <XAxis dataKey="area" tick={axisProps} angle={-35} textAnchor="end" />
-              <YAxis tick={axisProps} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-              <Tooltip formatter={(v: unknown) => [fmt(v as number)]} contentStyle={tooltipStyle} />
-              <Legend />
-              <Bar dataKey="budget" name="Budget" fill={CHART_COLORS[2]} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="forecast" name="Real" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+      <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
+        <h2 className="mb-6 text-base font-semibold text-[#F1BE48]">
+          Budget vs Real por Área
+        </h2>
+        <div className="overflow-x-auto">
+          <div style={{ minWidth: areaChartWidth, height: 380 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={areaChartData} margin={{ top: 4, right: 4, left: 0, bottom: 100 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
+                <XAxis
+                  dataKey="areaLabel"
+                  tick={axisProps}
+                  angle={-45}
+                  textAnchor="end"
+                  interval={0}
+                />
+                <YAxis tick={axisProps} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                <Tooltip
+                  formatter={(v: unknown) => [fmt(v as number)]}
+                  contentStyle={tooltipStyle}
+                />
+                <Legend verticalAlign="top" />
+                <Bar dataKey="budget" name="Budget" fill={CHART_COLORS[2]} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="forecast" name="Real" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
+      </div>
 
-        <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
-          <h2 className="mb-6 text-base font-semibold text-[#F1BE48]">
-            Budget vs Real por Dirección
-          </h2>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={byDireccion} {...chartProps}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
-              <XAxis dataKey="direccion" tick={axisProps} angle={-35} textAnchor="end" />
-              <YAxis tick={axisProps} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-              <Tooltip formatter={(v: unknown) => [fmt(v as number)]} contentStyle={tooltipStyle} />
-              <Legend />
-              <Bar dataKey="budget" name="Budget" fill={CHART_COLORS[2]} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="real" name="Real" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+      <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
+        <h2 className="mb-6 text-base font-semibold text-[#F1BE48]">
+          Budget vs Real por Dirección
+        </h2>
+        <div className="overflow-x-auto">
+          <div style={{ minWidth: dirChartWidth, height: 380 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dirChartData} margin={{ top: 4, right: 4, left: 0, bottom: 100 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
+                <XAxis
+                  dataKey="dirLabel"
+                  tick={axisProps}
+                  angle={-45}
+                  textAnchor="end"
+                  interval={0}
+                />
+                <YAxis tick={axisProps} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                <Tooltip
+                  formatter={(v: unknown) => [fmt(v as number)]}
+                  contentStyle={tooltipStyle}
+                />
+                <Legend verticalAlign="top" />
+                <Bar dataKey="budget" name="Budget" fill={CHART_COLORS[2]} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="real" name="Real" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
