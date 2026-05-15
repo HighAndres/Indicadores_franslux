@@ -18,39 +18,34 @@ export default async function DashboardPage() {
   const clientId = session.user.clientId;
 
   const latestForecast = await prisma.forecastGasto.findFirst({
+    where: { clientId, estatus: { not: "Activo" } },
+    orderBy: [{ anio: "desc" }, { mes: "desc" }],
+    select: { anio: true, mes: true },
+  }) ?? await prisma.forecastGasto.findFirst({
     where: { clientId },
     orderBy: [{ anio: "desc" }, { mes: "desc" }],
     select: { anio: true, mes: true },
   });
 
-  const latestHistorico = await prisma.historicoData.findFirst({
-    where: { clientId },
-    orderBy: [{ anio: "desc" }, { mes: "desc" }],
-    select: { anio: true, mes: true },
-  });
+  const refAnio = latestForecast?.anio;
+  const refMes = latestForecast?.mes;
 
-  const latestComision = await prisma.comisionMensual.findFirst({
-    where: { clientId },
-    orderBy: [{ anio: "desc" }, { mes: "desc" }],
-    select: { anio: true, mes: true },
-  });
-
-  const [gastoRealAgg, hcAgg, comisionData] = await Promise.all([
-    latestForecast
+  const [gastoRealAgg, hcCount, comisionData] = await Promise.all([
+    refAnio
       ? prisma.forecastGasto.aggregate({
-          where: { clientId, anio: latestForecast.anio, mes: latestForecast.mes, estatus: "Activo" },
+          where: { clientId, anio: refAnio, mes: refMes!, estatus: "Activo" },
           _sum: { forecast: true },
         })
       : null,
-    latestHistorico
-      ? prisma.historicoData.aggregate({
-          where: { clientId, anio: latestHistorico.anio, mes: latestHistorico.mes },
-          _sum: { hcReal: true },
+    refAnio
+      ? prisma.forecastGasto.aggregate({
+          where: { clientId, anio: refAnio, mes: refMes!, estatus: "Activo" },
+          _sum: { hcForecast: true },
         })
       : null,
-    latestComision
+    refAnio
       ? prisma.comisionMensual.findUnique({
-          where: { clientId_anio_mes: { clientId, anio: latestComision.anio, mes: latestComision.mes } },
+          where: { clientId_anio_mes: { clientId, anio: refAnio, mes: refMes! } },
           select: { realCosto: true },
         })
       : null,
@@ -66,7 +61,7 @@ export default async function DashboardPage() {
     },
     {
       title: "Total colaboradores",
-      value: hcAgg?._sum.hcReal ? hcAgg._sum.hcReal.toLocaleString("es-MX") : "—",
+      value: hcCount?._sum.hcForecast ? hcCount._sum.hcForecast.toLocaleString("es-MX") : "—",
       subtitle: "Headcount actualizado",
       href: "/dashboard/hc",
       icon: UsersRound,
