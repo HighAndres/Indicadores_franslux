@@ -90,7 +90,7 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
 
         {/* Footer */}
         <div className="border-t border-[#222222] px-6 py-3">
-          <p className="text-[10px] text-[#3a3a3a]">por Mirmibug</p>
+          <a href="https://mirmibug.com/" target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#3a3a3a] hover:text-[#555555] transition">por Mirmibug</a>
         </div>
       </div>
     </aside>
