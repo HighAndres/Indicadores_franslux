@@ -15,6 +15,7 @@ async function getForecastRows(clientId: string, anio: number, mes: number): Pro
     Mes: r.mes,
     Dirección: r.direccion,
     Área: r.area,
+    Estatus: r.estatus,
     Budget: r.budget,
     Real: r.forecast,
     "% Var.": r.budget > 0 ? ((r.forecast / r.budget) * 100).toFixed(1) + "%" : "N/A",

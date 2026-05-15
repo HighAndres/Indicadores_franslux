@@ -45,7 +45,7 @@ function parseBudgetForecast(
   rows: Record<string, unknown>[],
   tipo: "budget" | "forecast"
 ) {
-  const agg = new Map<string, { direccion: string; area: string; mes: number; costo: number; hc: number }>();
+  const agg = new Map<string, { direccion: string; area: string; mes: number; estatus: string; costo: number; hc: number }>();
 
   for (const row of rows) {
     const mesStr = toStr(getVal(row, "MES"));
@@ -56,17 +56,19 @@ function parseBudgetForecast(
     const area = toStr(getVal(row, "AREA FORECAST") ?? getVal(row, "AREAFORECAST"));
     if (!direccion || !area) continue;
 
+    const estatus = toStr(getVal(row, "ESTATUS")) || "Activo";
+
     const costoTotal = toNum(
       getVal(row, "COSTO TOTAL") ?? getVal(row, "COSTOTOTAL")
     );
 
-    const key = `${direccion}|${area}|${mes}`;
+    const key = `${direccion}|${area}|${mes}|${estatus}`;
     const existing = agg.get(key);
     if (existing) {
       existing.costo += costoTotal;
       existing.hc += 1;
     } else {
-      agg.set(key, { direccion, area, mes, costo: costoTotal, hc: 1 });
+      agg.set(key, { direccion, area, mes, estatus, costo: costoTotal, hc: 1 });
     }
   }
 
@@ -210,7 +212,7 @@ export async function uploadData(
         await tx.forecastGasto.deleteMany({ where: { clientId, anio } });
 
         const mergedMap = new Map<string, {
-          direccion: string; area: string; mes: number;
+          direccion: string; area: string; mes: number; estatus: string;
           budget: number; forecast: number; hcBudget: number; hcForecast: number;
         }>();
 
@@ -218,9 +220,9 @@ export async function uploadData(
           const rows = XLSX.utils.sheet_to_json(wb.Sheets[budgetSheet]) as Record<string, unknown>[];
           const parsed = parseBudgetForecast(rows, "budget");
           for (const item of parsed.data) {
-            const key = `${item.direccion}|${item.area}|${item.mes}`;
+            const key = `${item.direccion}|${item.area}|${item.mes}|${item.estatus}`;
             const existing = mergedMap.get(key) ?? {
-              direccion: item.direccion, area: item.area, mes: item.mes,
+              direccion: item.direccion, area: item.area, mes: item.mes, estatus: item.estatus,
               budget: 0, forecast: 0, hcBudget: 0, hcForecast: 0,
             };
             existing.budget = item.costo;
@@ -235,9 +237,9 @@ export async function uploadData(
           const rows = XLSX.utils.sheet_to_json(wb.Sheets[forecastSheet]) as Record<string, unknown>[];
           const parsed = parseBudgetForecast(rows, "forecast");
           for (const item of parsed.data) {
-            const key = `${item.direccion}|${item.area}|${item.mes}`;
+            const key = `${item.direccion}|${item.area}|${item.mes}|${item.estatus}`;
             const existing = mergedMap.get(key) ?? {
-              direccion: item.direccion, area: item.area, mes: item.mes,
+              direccion: item.direccion, area: item.area, mes: item.mes, estatus: item.estatus,
               budget: 0, forecast: 0, hcBudget: 0, hcForecast: 0,
             };
             existing.forecast = item.costo;
@@ -253,7 +255,7 @@ export async function uploadData(
           await tx.forecastGasto.createMany({
             data: forecastData.map((d) => ({
               clientId, anio, mes: d.mes,
-              direccion: d.direccion, area: d.area,
+              direccion: d.direccion, area: d.area, estatus: d.estatus,
               budget: d.budget, forecast: d.forecast,
               hcBudget: d.hcBudget, hcForecast: d.hcForecast,
             })),

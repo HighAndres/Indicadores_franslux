@@ -60,6 +60,7 @@ model ForecastGasto {
   forecast   Float  @default(0)
   hcBudget   Int    @default(0)
   hcForecast Int    @default(0)
+  estatus    String @default("Activo")
 
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
@@ -69,6 +70,7 @@ model ForecastGasto {
   @@index([clientId, anio, mes])
   @@index([clientId, direccion])
   @@index([clientId, area])
+  @@index([clientId, estatus])
 }
 
 // From Historico Excel sheet — one row per población per month

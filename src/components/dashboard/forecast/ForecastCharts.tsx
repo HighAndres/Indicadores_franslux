@@ -46,20 +46,22 @@ interface Props {
   data: ForecastRow[];
   direcciones: string[];
   selectedDireccion: string;
+  estatuses: string[];
+  selectedEstatus: string;
 }
 
-export function ForecastCharts({ data, direcciones, selectedDireccion }: Props) {
+export function ForecastCharts({ data, direcciones, selectedDireccion, estatuses, selectedEstatus }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  function updateDireccion(value: string) {
+  function updateParam(key: string, value: string, clearValue = "") {
     const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set("direccion", value);
+    if (value && value !== clearValue) {
+      params.set(key, value);
     } else {
-      params.delete("direccion");
+      params.delete(key);
     }
     startTransition(() => {
       router.push(`${pathname}?${params.toString()}`);
@@ -101,19 +103,34 @@ export function ForecastCharts({ data, direcciones, selectedDireccion }: Props) 
 
   return (
     <div className="space-y-5">
-      {/* Filtro por dirección */}
-      <div className={`flex items-center gap-3 ${isPending ? "opacity-60" : ""}`}>
-        <label className="text-sm font-medium text-[#9A9A9A]">Dirección:</label>
-        <select
-          value={selectedDireccion}
-          onChange={(e) => updateDireccion(e.target.value)}
-          className="rounded-xl border border-[#222222] bg-[#111111] px-3 py-2 text-sm font-medium text-[#9A9A9A] outline-none focus:border-[#238D80] focus:ring-2 focus:ring-[#238D80]/20"
-        >
-          <option value="">Todas las direcciones</option>
-          {direcciones.map((d) => (
-            <option key={d} value={d}>{d}</option>
-          ))}
-        </select>
+      {/* Filtros */}
+      <div className={`flex flex-wrap items-center gap-4 ${isPending ? "opacity-60" : ""}`}>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-[#9A9A9A]">Estatus:</label>
+          <select
+            value={selectedEstatus}
+            onChange={(e) => updateParam("estatus", e.target.value, "Activo")}
+            className="rounded-xl border border-[#222222] bg-[#111111] px-3 py-2 text-sm font-medium text-[#9A9A9A] outline-none focus:border-[#238D80] focus:ring-2 focus:ring-[#238D80]/20"
+          >
+            <option value="Todos">Todos</option>
+            {estatuses.map((e) => (
+              <option key={e} value={e}>{e}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-[#9A9A9A]">Dirección:</label>
+          <select
+            value={selectedDireccion}
+            onChange={(e) => updateParam("direccion", e.target.value)}
+            className="rounded-xl border border-[#222222] bg-[#111111] px-3 py-2 text-sm font-medium text-[#9A9A9A] outline-none focus:border-[#238D80] focus:ring-2 focus:ring-[#238D80]/20"
+          >
+            <option value="">Todas las direcciones</option>
+            {direcciones.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+        </div>
         {isPending && <span className="text-sm text-[#555555]">Cargando…</span>}
       </div>
 
