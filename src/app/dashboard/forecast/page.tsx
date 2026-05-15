@@ -17,19 +17,30 @@ const fmt = (v: number) =>
 export default async function ForecastPage({
   searchParams,
 }: {
-  searchParams: Promise<{ anio?: string; mes?: string; direccion?: string }>;
+  searchParams: Promise<{ anio?: string; mes?: string; direccion?: string; estatus?: string }>;
 }) {
   const session = await auth();
   if (!session) redirect("/login");
 
-  const { anio: anioStr, mes: mesStr, direccion } = await searchParams;
+  const { anio: anioStr, mes: mesStr, direccion, estatus } = await searchParams;
   const anio = parseInt(anioStr ?? "2026");
   const mes = parseInt(mesStr ?? "4");
+  const selectedEstatus = estatus ?? "Activo";
 
   const allData = await prisma.forecastGasto.findMany({
-    where: { clientId: session.user.clientId, anio, mes },
+    where: {
+      clientId: session.user.clientId, anio, mes,
+      ...(selectedEstatus !== "Todos" ? { estatus: selectedEstatus } : {}),
+    },
     orderBy: { forecast: "desc" },
   });
+
+  const estatuses = await prisma.forecastGasto.findMany({
+    where: { clientId: session.user.clientId, anio, mes },
+    select: { estatus: true },
+    distinct: ["estatus"],
+  });
+  const estatusList = estatuses.map((e) => e.estatus).sort();
 
   const direcciones = [...new Set(allData.map((r) => r.direccion))].sort();
 
@@ -90,6 +101,8 @@ export default async function ForecastPage({
           }))}
           direcciones={direcciones}
           selectedDireccion={direccion ?? ""}
+          estatuses={estatusList}
+          selectedEstatus={selectedEstatus}
         />
       )}
     </div>

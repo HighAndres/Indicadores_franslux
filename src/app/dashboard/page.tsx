@@ -17,6 +17,12 @@ export default async function DashboardPage() {
 
   const clientId = session.user.clientId;
 
+  const latestForecast = await prisma.forecastGasto.findFirst({
+    where: { clientId },
+    orderBy: [{ anio: "desc" }, { mes: "desc" }],
+    select: { anio: true, mes: true },
+  });
+
   const latestHistorico = await prisma.historicoData.findFirst({
     where: { clientId },
     orderBy: [{ anio: "desc" }, { mes: "desc" }],
@@ -29,11 +35,11 @@ export default async function DashboardPage() {
     select: { anio: true, mes: true },
   });
 
-  const [historicoAgg, hcAgg, comisionData] = await Promise.all([
-    latestHistorico
-      ? prisma.historicoData.aggregate({
-          where: { clientId, anio: latestHistorico.anio, mes: latestHistorico.mes },
-          _sum: { real: true },
+  const [gastoRealAgg, hcAgg, comisionData] = await Promise.all([
+    latestForecast
+      ? prisma.forecastGasto.aggregate({
+          where: { clientId, anio: latestForecast.anio, mes: latestForecast.mes, estatus: "Activo" },
+          _sum: { forecast: true },
         })
       : null,
     latestHistorico
@@ -53,7 +59,7 @@ export default async function DashboardPage() {
   const cards = [
     {
       title: "Gasto real",
-      value: historicoAgg?._sum.real ? fmt(historicoAgg._sum.real) : "—",
+      value: gastoRealAgg?._sum.forecast ? fmt(gastoRealAgg._sum.forecast) : "—",
       subtitle: "Dato del último mes",
       href: "/dashboard/forecast",
       icon: LineChart,
